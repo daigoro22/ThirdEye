@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         udpManager=new UDPManager(new CommunicationEventListener() {
             @Override
             public void onConnect(String mes) {
+
             }
 
             @Override
@@ -98,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume(){
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_2, this, new LoaderCallbackInterface() {
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, new LoaderCallbackInterface() {
             @Override
             public void onManagerConnected(int status) {
                 if(status== LoaderCallbackInterface.SUCCESS) {

@@ -37,6 +37,7 @@ public class CaptureManager {
     private int width, height;
     private Context context;
     public final String TAG = "CaptureManager";
+    private String CAMERANUM="0";
     final int bufferSize=1048576;
     private byte[][] currentImageData=new byte[3][bufferSize];
     private byte[][] currentImageDataBuffer=new byte[3][bufferSize];
@@ -125,7 +126,7 @@ public class CaptureManager {
                 captureSession = session;
                 captureBuilder = null;
                 try {
-                    CameraCharacteristics cc=cameraManager.getCameraCharacteristics("0");
+                    CameraCharacteristics cc=cameraManager.getCameraCharacteristics(CAMERANUM);
                     Range<Integer>[] a=cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
                     for (Range<Integer> b:a)
                         Log.i("fps",b.toString());
@@ -138,6 +139,8 @@ public class CaptureManager {
                     captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                     captureBuilder.addTarget(imageReader.getSurface());
                     captureSession.setRepeatingBurst(Arrays.asList(captureBuilder.build()),null,handler);
+
+                    //captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
                     captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
                     captureBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_OFF);
                     captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,16666666l);
@@ -227,7 +230,7 @@ public class CaptureManager {
         }
 
         try {
-            cameraManager.openCamera("0", cameraDeviceStateCallback,handler);
+            cameraManager.openCamera(CAMERANUM, cameraDeviceStateCallback,handler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
