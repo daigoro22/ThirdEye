@@ -45,6 +45,7 @@ public class UDPManager
     private int senderPacketNum,getterPacketNum;
     private int maxIndexNum,getterIndexNum=0;
     private boolean isDataDevided;
+
     enum NODE_TYPE{
         TCPSERVER("TCPサーバー"),
         TCPCLIENT("TCPクライアント"),

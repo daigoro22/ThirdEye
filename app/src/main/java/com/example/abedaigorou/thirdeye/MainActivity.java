@@ -29,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
     final static int PORT_DEFAULT = 8001;   // 待受ポート番号
     private String HOST="";
     private int PORT=0;
-    final static int width=176;//176
-    final static int height=144;//144
+    final static int width=320;//176
+    final static int height=240;//144
     final static int size=width*(height+height/2);
     //final static int size=777600;
     UDPManager udpManager;
