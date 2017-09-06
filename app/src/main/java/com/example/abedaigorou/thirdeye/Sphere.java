@@ -222,7 +222,7 @@ public class Sphere
         //Log.i(TAG,String.valueOf(u)+":"+String.valueOf(v));
     }
 
-    private void calcTextureCoords(){
+    private void calcTextureCoords(boolean isRotate){
         float u,v=0,radU,radV;
         int count;
         for(int i=0;i<=stacks;i++) {
@@ -232,9 +232,10 @@ public class Sphere
                 radV=(float)asin(coordinates[count+1]);
                 //radV= (float)atan2(coordinates[count + 1] ,sqrt(pow(coordinates[count], 2) + pow(coordinates[count + 2], 2)));
                 //((coordinates[count]==0&&coordinates[count+1]==0&&coordinates[count+2]==0)?0:atan(coordinates[count + 1] /sqrt(pow(coordinates[count], 2) + pow(coordinates[count + 2], 2))));
-                u = (float) ((1/(2 * PI))*radU+0.5);//1/2だとintで0になってしまう
-                v =(float) ((1/ PI) *radV+0.5);
-                addTexCoord(1 - u, 1 - v);
+
+                u =1-(float) ((1/(2 * PI))*radU+0.5);//1/2だとintで0になってしまう
+                v =1-(float) ((1/ PI) *radV+0.5);
+                addTexCoord((isRotate)?v:u,(isRotate)?u:v);
                 /*if(j==slices&&!(i==0||i==stacks)){
                     addTexCoord(0,v);
                 }else{
@@ -247,7 +248,7 @@ public class Sphere
         showLog(texCoordinates,"texCoordinates",2);
     }
 
-    public void build(boolean isInsideOut){
+    public void build(boolean isInsideOut,boolean isRotate){
         float xBuffer=0f,yBuffer=0f,zBuffer=0f,r,ph,th;
         for(int i=0;i<=stacks;i++){
             ph=(float)PI*i/stacks;
@@ -263,9 +264,9 @@ public class Sphere
         showLog(coordinates,"coordinates",3);
         Log.i(TAG,"coordinates:"+String.valueOf(coordinatesCount));
         calcIndex(isInsideOut);
-        calcTextureCoords();
+        calcTextureCoords(isRotate);
     }
-
+    
     public float[] getCoordinates(){
         return coordinates;
     }

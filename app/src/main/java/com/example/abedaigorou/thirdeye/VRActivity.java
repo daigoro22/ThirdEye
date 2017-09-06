@@ -123,10 +123,13 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
         float[] perspective=eye.getPerspective(Z_NEAR,Z_FAR);
 
         Matrix.setIdentityM(scale,0);
-        Matrix.setIdentityM(rotate,0);
         Matrix.scaleM(scale,0,50,50,50);
-        Matrix.rotateM(rotate,0,90,0,0,1);
+
+        //切れ目があるため、回転
+        Matrix.setIdentityM(rotate,0);
+        Matrix.rotateM(rotate,0,90,0,1,0);
         Matrix.multiplyMM(scale,0,rotate,0,scale,0);
+
         /*Matrix.setIdentityM(translate,0);
         Matrix.rotateM(translate,0,frameCount,0,1,0);
         Matrix.multiplyMM(scale,0,scale,0,translate,0);*/
@@ -192,7 +195,7 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
         Log.i(TAG,"onSurfaceCreated");
         GLES20.glClearColor(0f, 0f, 1f,1f);
 
-        sphere.build(true);
+        sphere.build(true,true);
 
         drawVertexBuffer=VRUtil.convert(sphere.getCoordinates());
 
