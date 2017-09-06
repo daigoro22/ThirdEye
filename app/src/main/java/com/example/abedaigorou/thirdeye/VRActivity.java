@@ -27,7 +27,7 @@ import static android.opengl.GLES20.GL_TEXTURE_2D;
 
 public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
     private static final String TAG="VRRobot";
-    private static final float CAMERA_Z = 25f;
+    private static final float CAMERA_Z = 10;
     private static VRActivity instance;
     public static final String sVertexShaderSource =
                     //"uniform mat4 wMatrix;" +
@@ -125,10 +125,10 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
         Matrix.setIdentityM(scale,0);
         Matrix.scaleM(scale,0,50,50,50);
 
-        //切れ目があるため、回転
+        /*//切れ目があるため、回転
         Matrix.setIdentityM(rotate,0);
         Matrix.rotateM(rotate,0,90,0,1,0);
-        Matrix.multiplyMM(scale,0,rotate,0,scale,0);
+        Matrix.multiplyMM(scale,0,rotate,0,scale,0);*/
 
         /*Matrix.setIdentityM(translate,0);
         Matrix.rotateM(translate,0,frameCount,0,1,0);
@@ -195,7 +195,7 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
         Log.i(TAG,"onSurfaceCreated");
         GLES20.glClearColor(0f, 0f, 1f,1f);
 
-        sphere.build(true,true);
+        sphere.build(true,true,true);
 
         drawVertexBuffer=VRUtil.convert(sphere.getCoordinates());
 
