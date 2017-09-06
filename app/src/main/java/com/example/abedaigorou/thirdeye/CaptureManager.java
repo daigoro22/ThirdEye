@@ -93,6 +93,7 @@ public class CaptureManager {
         }
 
         cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+
         cameraDeviceStateCallback = new CameraDevice.StateCallback() {
             @Override
             public void onOpened(@NonNull CameraDevice camera) {
@@ -138,13 +139,14 @@ public class CaptureManager {
                     //captureBuilder=cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
                     captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                     captureBuilder.addTarget(imageReader.getSurface());
+
                     captureSession.setRepeatingBurst(Arrays.asList(captureBuilder.build()),null,handler);
 
-                    //captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
+                    captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                     captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
                     captureBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_OFF);
                     captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,16666666l);
-                    captureBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,new Range<>(120,120));
+                    captureBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,new Range<>(60,60));
                     captureBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION,16666666l);
 
                     /*handler.post(new Runnable() {

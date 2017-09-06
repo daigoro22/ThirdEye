@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onRead(final byte[] getter) {
-                throwMain(new Runnable() {
+                runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         mYuvMat=ImageUtils.ByteToMat(getter,width,height);
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showToast(String mes1){
         final String mes=mes1;
-        new Handler(getMainLooper()).post(new Runnable() {
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Toast.makeText(MainActivity.instance,mes,Toast.LENGTH_SHORT).show();
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         captureManager=CaptureManager.newInstance(width, height, this, new CaptureEventListener() {
             @Override
             public void onTakeImage(final byte[] data) {
-                throwMain(new Runnable() {
+                runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                     System.arraycopy(data,0,imageData,0,data.length);
@@ -177,16 +177,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setImage(final Bitmap bitmap){
-            throwMain(new Runnable() {
+            runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 imageView.setImageBitmap(bitmap);
             }
             });
-    }
-
-    private void throwMain(Runnable r){
-        if(mainHandler!=null)
-            mainHandler.post(r);
     }
 }
