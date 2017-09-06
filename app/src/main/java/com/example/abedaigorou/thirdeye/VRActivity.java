@@ -15,6 +15,8 @@ import com.google.vr.sdk.base.GvrView;
 import com.google.vr.sdk.base.HeadTransform;
 import com.google.vr.sdk.base.Viewport;
 
+import org.opencv.core.Mat;
+
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
@@ -25,7 +27,7 @@ import static android.opengl.GLES20.GL_TEXTURE_2D;
 
 public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
     private static final String TAG="VRRobot";
-    private static final float CAMERA_Z = 80f;
+    private static final float CAMERA_Z = 25f;
     private static VRActivity instance;
     public static final String sVertexShaderSource =
                     //"uniform mat4 wMatrix;" +
@@ -53,7 +55,7 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
     private final float Z_FAR=100.0f;
     private int cubeProgram;
 
-    private int cubePositionParam;
+    private int drawPositionParam;
     private int vpPositionParam;
     private int scaleParam;
     private int cubeTextureVertexParam;
@@ -61,17 +63,20 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
 
     private int[] cubeTextureID=new int[1];
 
-    FloatBuffer cb;
+    FloatBuffer drawVertexBuffer;
     FloatBuffer cubeTextureBuffer;
     ShortBuffer cubeIndexBuffer;
 
 
+    private float[] sphereVertex;
+    private Sphere sphere=new Sphere(14,14,10);
     private float[] camera=new float[16];//カメラ
     private float[] view=new float[16];//ビュー座標変換行列
     private float[] modelView=new float[16];
     private float[] modelViewProjection=new float[16];//透視投影変換行列
     private float[] translate=new float[16];
     float[] scale=new float[16];
+    float[] rotate=new float[16];
     private int frameCount=0;
     private Bitmap imageBitmap;
 
@@ -118,7 +123,10 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
         float[] perspective=eye.getPerspective(Z_NEAR,Z_FAR);
 
         Matrix.setIdentityM(scale,0);
-        Matrix.scaleM(scale,0,50,50,1);
+        Matrix.setIdentityM(rotate,0);
+        Matrix.scaleM(scale,0,50,50,50);
+        Matrix.rotateM(rotate,0,90,0,0,1);
+        Matrix.multiplyMM(scale,0,rotate,0,scale,0);
         /*Matrix.setIdentityM(translate,0);
         Matrix.rotateM(translate,0,frameCount,0,1,0);
         Matrix.multiplyMM(scale,0,scale,0,translate,0);*/
@@ -132,7 +140,7 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
 
         //オブジェクト座標代入
         //有効化
-        GLES20.glEnableVertexAttribArray(cubePositionParam);
+        GLES20.glEnableVertexAttribArray(drawPositionParam);
         GLES20.glEnableVertexAttribArray(cubeTextureVertexParam);
 
 
@@ -148,17 +156,18 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
         //テクスチャ画像更新
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,imageBitmap,0);
 
-        GLES20.glVertexAttribPointer(cubePositionParam,3,GLES20.GL_FLOAT,false,0,cb);
+        //GLES20.glVertexAttribPointer(cubePositionParam,3,GLES20.GL_FLOAT,false,0,cb);
+        GLES20.glVertexAttribPointer(drawPositionParam,3,GLES20.GL_FLOAT,false,0,drawVertexBuffer);
         GLES20.glUniformMatrix4fv(vpPositionParam,1,false,modelViewProjection,0);
         GLES20.glUniformMatrix4fv(scaleParam,1,false,scale,0);
         GLES20.glVertexAttribPointer(cubeTextureVertexParam,2,GLES20.GL_FLOAT,false,0,cubeTextureBuffer);
 
-        //GLES20.glDrawElements(GLES20.GL_TRIANGLES,cubeIndexBuffer.capacity(), GLES20.GL_UNSIGNED_SHORT, cubeIndexBuffer);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES,0,objectDatas.cubeVertices.length/3);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES,cubeIndexBuffer.capacity(), GLES20.GL_UNSIGNED_SHORT, cubeIndexBuffer);
+        //GLES20.glDrawArrays(GLES20.GL_TRIANGLES,0,objectDatas.cubeVertices.length/3);
 
 
         //無効化
-        GLES20.glDisableVertexAttribArray(cubePositionParam);
+        GLES20.glDisableVertexAttribArray(drawPositionParam);
         GLES20.glDisableVertexAttribArray(cubeTextureVertexParam);
 
         checkGLError("Drawing cube");
@@ -183,11 +192,14 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
         Log.i(TAG,"onSurfaceCreated");
         GLES20.glClearColor(0f, 0f, 1f,1f);
 
-        //頂点座標のバッファ
-        cb=VRUtil.convert(objectDatas.cubeVertices);
+        sphere.build(true);
+
+        drawVertexBuffer=VRUtil.convert(sphere.getCoordinates());
+
         //テクスチャ座標バッファ
-        cubeTextureBuffer=VRUtil.convert(objectDatas.cubeTexture);
-        cubeIndexBuffer=VRUtil.convert(objectDatas.cubeIndices);
+        cubeTextureBuffer=VRUtil.convert(sphere.getTexCoordinates());
+
+        cubeIndexBuffer=VRUtil.convert(sphere.getIndex());
 
         //シェーダ読み込み
         int vertexShader=VRUtil.loadShader(GLES20.GL_VERTEX_SHADER,sVertexShaderSource);
@@ -200,7 +212,7 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
         checkGLError("Cube program");
 
         //ポインタ取得
-        cubePositionParam=GLES20.glGetAttribLocation(cubeProgram,"position");
+        drawPositionParam=GLES20.glGetAttribLocation(cubeProgram,"position");
         vpPositionParam=GLES20.glGetUniformLocation(cubeProgram,"vpMatrix");
         scaleParam=GLES20.glGetUniformLocation(cubeProgram,"sMatrix");
         cubeTextureVertexParam=GLES20.glGetAttribLocation(cubeProgram,"A_texture_uv");
