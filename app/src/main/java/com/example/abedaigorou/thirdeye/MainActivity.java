@@ -29,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
     final static int PORT_DEFAULT = 8001;   // 待受ポート番号
     private String HOST="";
     private int PORT=0;
-    final static int width=320;//176
-    final static int height=240;//144
+    final static int width=640;//176;
+    final static int height=480;//144;
     final static int size=width*(height+height/2);
     //final static int size=777600;
     UDPManager udpManager;
@@ -66,13 +66,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDiconnect(String mes) {
                 showToast("切断");
-            }
-
-            @Override
-            public byte[] onSend() {
-                if(imageData!=null)
-                    return imageData;
-                return new byte[1];
             }
 
             @Override
@@ -138,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
         captureManager=CaptureManager.newInstance(width, height, this, new CaptureEventListener() {
             @Override
             public void onTakeImage(final byte[] data) {
+                udpManager.sendData(data);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

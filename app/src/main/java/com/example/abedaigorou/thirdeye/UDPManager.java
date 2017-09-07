@@ -130,7 +130,6 @@ public class UDPManager
         try {
             SenderUdpSocket.setReceiveBufferSize(packetSize);
             SenderUdpSocket.setSendBufferSize(packetSize);
-
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -218,59 +217,53 @@ public class UDPManager
     }
 
     private void Send() {
-        (sendHandler=Util.GetNewHandler("SendThread")).post(new Runnable() {
+        sendHandler=Util.GetNewHandler("SendThread");
+    }
+
+    public void sendData(final byte[] data){
+        if(sendHandler==null)
+            return;
+        sendHandler.post(new Runnable() {
             @Override
             public void run() {
-                while(run) {
-                    Sync_Send();
-                    if((senderBuffer=listener.onSend())==null)
-                        continue;
-                    System.arraycopy(senderBuffer,0,sender,0,senderBuffer.length);
+                Sync_Send();
+                if((senderBuffer=data)==null)
+                    return;
+                System.arraycopy(senderBuffer,0,sender,0,senderBuffer.length);
 
-                    if (nodeType == NODE_TYPE.UDPCLIENT) {
-                        //while(offset<) {
-                        //senderDatagram.setData(sender, offset += packetSize, packetSize);
-                        while (senderOffset+packetSize < bufferSize) {
-                            senderPacketBuffer[0]=(byte)senderPacketNum;
-                            System.arraycopy(sender,senderOffset,senderPacketBuffer,1,packetSize-1);
-                            senderDatagram.setData(senderPacketBuffer,0,packetSize);
-                            try {
-                                SenderUdpSocket.send(senderDatagram);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            senderOffset += packetSize-1;
-                            senderPacketNum++;
-                            try {
-                                Thread.sleep(sendDelay);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        if(isDataDevided) {
-                            senderPacketBuffer[0] = (byte) senderPacketNum;
-                            System.arraycopy(sender, senderOffset, senderPacketBuffer, 1, bufferSize - senderOffset);
-                            senderDatagram.setData(senderPacketBuffer, 0, bufferSize - senderOffset);
-                        }else{
-                            System.arraycopy(sender,0,senderPacketBuffer,0,sender.length);
-                            senderDatagram.setData(senderBuffer,0,senderBuffer.length);
-                        }
+                if (nodeType == NODE_TYPE.UDPCLIENT) {
+                    //while(offset<) {
+                    //senderDatagram.setData(sender, offset += packetSize, packetSize);
+                    while (senderOffset+packetSize < bufferSize) {
+                        senderPacketBuffer[0]=(byte)senderPacketNum;
+                        System.arraycopy(sender,senderOffset,senderPacketBuffer,1,packetSize-1);
+                        senderDatagram.setData(senderPacketBuffer,0,packetSize);
                         try {
                             SenderUdpSocket.send(senderDatagram);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        senderPacketNum=0;
-                        senderOffset=0;
-                        try {
-                            Thread.sleep(lastSendDelay);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                        senderOffset += packetSize-1;
+                        senderPacketNum++;
                     }
-                    else//サーバー側へ送る
-                        ;//udpSocket_Server.send(senderDatagram);
+                    if(isDataDevided) {
+                        senderPacketBuffer[0] = (byte) senderPacketNum;
+                        System.arraycopy(sender, senderOffset, senderPacketBuffer, 1, bufferSize - senderOffset);
+                        senderDatagram.setData(senderPacketBuffer, 0, bufferSize - senderOffset);
+                    }else{
+                        System.arraycopy(sender,0,senderPacketBuffer,0,sender.length);
+                        senderDatagram.setData(senderBuffer,0,senderBuffer.length);
+                    }
+                    try {
+                        SenderUdpSocket.send(senderDatagram);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    senderPacketNum=0;
+                    senderOffset=0;
                 }
+                else//サーバー側へ送る
+                    ;//udpSocket_Server.send(senderDatagram);
             }
         });
     }
