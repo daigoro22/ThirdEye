@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         editText.setText(HOST_DEFAULT);
         editText2.setText(String.valueOf(PORT_DEFAULT));
         mainHandler=new Handler(getMainLooper());
+
         udpManager=new UDPManager(new CommunicationEventListener() {
             @Override
             public void onConnect(String mes) {
@@ -86,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 if(vrActivity==null)
                     setImage(bitmap);
             }
-        },size,1);
+        },size);
     }
 
     @Override

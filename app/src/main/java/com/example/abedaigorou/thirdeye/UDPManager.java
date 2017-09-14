@@ -35,7 +35,6 @@ public class UDPManager
     private byte[] getter;
     private byte[] getterPacketBuffer;
     //private byte[] getterPacket;
-    private int interval;
     private int senderOffset=0,getterOffset=0;
     private int packetSize;
     private final byte[] sync={(byte)127,(byte)68,(byte)99,(byte)16};
@@ -60,10 +59,9 @@ public class UDPManager
         }
     }
 
-    public UDPManager(CommunicationEventListener listener,int bufferSize,int interval){
+    public UDPManager(CommunicationEventListener listener,int bufferSize){
         this.listener=listener;
         this.bufferSize=bufferSize;
-        this.interval=interval;
         sender=new byte[bufferSize];
         senderBuffer=new byte[bufferSize];
         if(bufferSize>64000){//データ分割するかどうか
@@ -104,8 +102,7 @@ public class UDPManager
         }
         listener.onConnected(nodeType.name);
 
-        if(interval>0)
-            Read();
+        Read();
     }
 
     public void ClientConnect(String addr,int port){
@@ -135,8 +132,7 @@ public class UDPManager
         }
         listener.onConnected(nodeType.name);
 
-        if(interval>0)
-            Send();
+        Send();
     }
 
     private void Sync_Read(){
