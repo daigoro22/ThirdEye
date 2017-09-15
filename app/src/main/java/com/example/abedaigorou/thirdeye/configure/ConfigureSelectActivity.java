@@ -18,6 +18,7 @@ import com.example.abedaigorou.thirdeye.R;
 
 public class ConfigureSelectActivity extends Activity
 {
+    private int reqCode=0;
     @Override
     public void onCreate(Bundle bundle){
         super.onCreate(bundle);
@@ -26,6 +27,7 @@ public class ConfigureSelectActivity extends Activity
         ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1);
         adapter.add("VR設定");
         adapter.add("カメラ設定");
+        adapter.add("通信設定");
         ListView listView=(ListView)findViewById(R.id.confugureSelectList);
         listView.setAdapter(adapter);
 
@@ -35,12 +37,16 @@ public class ConfigureSelectActivity extends Activity
                 Intent intent=new Intent(getApplicationContext(),ConfigureActivity.class);
                 switch (position){
                     case 0:
-                        intent.putExtra(ConfigureActivity.INTENTTAG,ConfigureActivity.REQUEST_CODE_VR);
+                        reqCode=ConfigureActivity.REQUEST_CODE_VR;
                         break;
                     case 1:
-                        intent.putExtra(ConfigureActivity.INTENTTAG,ConfigureActivity.REQUEST_CODE_CAMERA);
+                        reqCode=ConfigureActivity.REQUEST_CODE_CAMERA;
+                        break;
+                    case 2:
+                        reqCode=ConfigureActivity.REQUEST_CODE_COMMUNICATION;
                         break;
                 }
+                intent.putExtra(ConfigureActivity.INTENTTAG,reqCode);
                 startActivity(intent);
             }
         });

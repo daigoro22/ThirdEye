@@ -24,6 +24,7 @@ import com.example.abedaigorou.thirdeye.ImageUtils;
 import com.example.abedaigorou.thirdeye.R;
 import com.example.abedaigorou.thirdeye.configure.CameraConfigure.CameraConfigureFragment;
 import com.example.abedaigorou.thirdeye.configure.CameraConfigure.PreviewFragment;
+import com.example.abedaigorou.thirdeye.configure.CommunicationConfigure.CommunicationConfigureFragment;
 import com.example.abedaigorou.thirdeye.configure.VRConfigure.GLPreviewFragment;
 import com.example.abedaigorou.thirdeye.configure.VRConfigure.VRConfigureFragment;
 
@@ -39,15 +40,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ConfigureActivity extends Activity implements VRConfigureFragment.VRConfigureEventListener,CameraConfigureFragment.CameraConfigureEventListener,
-        PreviewFragment.PreviewFragmentEventListener
+        PreviewFragment.PreviewFragmentEventListener,CommunicationConfigureFragment.CommunicationConfigureEventListener
 {
     private Bitmap bitmap;
     private int width,height,afMode;
     private Mat rgbaMatOut,bgrMat,mYuvMat;
     PreviewFragment previewFragment;
-    CameraConfigureFragment configureFragment;
+    CameraConfigureFragment cameraConfigureFragment;
     GLPreviewFragment glPreviewFragment;
     VRConfigureFragment vrConfigureFragment;
+    CommunicationConfigureFragment communicationConfigureFragment;
     private CaptureManager manager;
     private CaptureManager.CaptureEventListener listener;
     private final String TAG="ConfigureActivity";
@@ -56,6 +58,7 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
     public final static int REQUEST_CODE_CAMERA=0;
     public final static int REQUEST_CODE_VR=1;
     public final static int REQUEST_CODE_FIRSTTIME=2;
+    public final static int REQUEST_CODE_COMMUNICATION=3;
     private SharedPreferences sharedPreferences;
     private int requestCode;
     private static ConfigureActivity instance;
@@ -102,10 +105,10 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                         }
 
                         if(fragment2!=null&&fragment2 instanceof CameraConfigureFragment){
-                            configureFragment=(CameraConfigureFragment)fragment2;
+                            cameraConfigureFragment=(CameraConfigureFragment)fragment2;
                         }else{
-                            configureFragment=CameraConfigureFragment.createInstance(1920,1080);
-                            transaction.add(R.id.container2,configureFragment);
+                            cameraConfigureFragment=CameraConfigureFragment.createInstance(1920,1080);
+                            transaction.add(R.id.container2,cameraConfigureFragment);
                         }
                         break;
 
@@ -124,6 +127,16 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                             transaction.add(R.id.container2,vrConfigureFragment);
                         }
                         break;
+                    
+                    case REQUEST_CODE_COMMUNICATION:
+                        if(fragment1!=null&&fragment1 instanceof CommunicationConfigureFragment){
+                            communicationConfigureFragment=(CommunicationConfigureFragment)fragment1;
+                        }else{
+                            communicationConfigureFragment=new CommunicationConfigureFragment();
+                            transaction.add(R.id.container1,communicationConfigureFragment);
+                        }
+                        break;
+                        
                 }
                 transaction.commit();
             }
@@ -235,10 +248,10 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
             manager.setListener(listener);
         }
 
-        configureFragment.setImageSizes(manager.getAvailableImageSize());
-        configureFragment.setMaxFocus(manager.getMaxFocus());
+        cameraConfigureFragment.setImageSizes(manager.getAvailableImageSize());
+        cameraConfigureFragment.setMaxFocus(manager.getMaxFocus());
         if(manager.getHardwareLebel()==2){
-            configureFragment.setEnabled(false,R.string.key_focus_preference);
+            cameraConfigureFragment.setEnabled(false,R.string.key_focus_preference);
         }
 
         int[] isize=ConfigureUtils.getConfiguredSize(getApplicationContext(),sharedPreferences);
@@ -276,6 +289,26 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
 
     @Override
     public void onDevideLatitudeConfigured(int devide) {
+
+    }
+
+    @Override
+    public void onCommunicationConfigureViewCreated() {
+        
+    }
+
+    @Override
+    public void onReceiveImageWidthConfigured(int width) {
+
+    }
+
+    @Override
+    public void onReceiveImageHeightConfigured(int height) {
+
+    }
+
+    @Override
+    public void onIsServerConfigured() {
 
     }
 }

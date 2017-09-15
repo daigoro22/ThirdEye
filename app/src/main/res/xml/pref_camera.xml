@@ -1,12 +1,5 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <EditTextPreference
-        android:defaultValue="@string/app_name"
-        android:key="@string/key_text_preference"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="Edit text preference" />
-
     <ListPreference
         android:defaultValue="0"
         android:entries="@array/entry_autofocus"

@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.example.abedaigorou.thirdeye.R;
+import com.example.abedaigorou.thirdeye.configure.ConfigureUtils;
 import com.example.abedaigorou.thirdeye.configure.SeekbarPreference;
 
 import java.util.regex.Pattern;
@@ -72,9 +73,9 @@ public class VRConfigureFragment extends PreferenceFragment implements SharedPre
         cameraPosition=(SeekbarPreference)findPreference(getString(R.string.key_cameraposition_preference));
 
         if(key.equals(getString(R.string.key_devidelatitude_preference))) {
-            if (isNumber(devideLatitude.getText())) {
+            if (ConfigureUtils.isNumber(devideLatitude.getText())) {
                 int parse;
-                if (isEven(parse = Integer.parseInt(devideLatitude.getText()))) {
+                if (ConfigureUtils.isEven(parse = Integer.parseInt(devideLatitude.getText()))) {
                     listener.onDevideLatitudeConfigured(parse);
                     devideLatitude.setSummary(devideLatitude.getText());
                 } else {
@@ -85,10 +86,10 @@ public class VRConfigureFragment extends PreferenceFragment implements SharedPre
             }
         }
 
-        if(key.equals(getString(R.string.key_devidelongitude_preference))) {
-            if (isNumber(devideLongitude.getText())) {
+        else if(key.equals(getString(R.string.key_devidelongitude_preference))) {
+            if (ConfigureUtils.isNumber(devideLongitude.getText())) {
                 int parse;
-                if (isEven(parse = Integer.parseInt(devideLongitude.getText()))) {
+                if (ConfigureUtils.isEven(parse = Integer.parseInt(devideLongitude.getText()))) {
                     listener.onDevideLongitudeConfigured(parse);
                     devideLongitude.setSummary(devideLongitude.getText());
                 } else {
@@ -99,20 +100,8 @@ public class VRConfigureFragment extends PreferenceFragment implements SharedPre
             }
         }
 
-        listener.onCameraPositionConfigured(cameraPosition.getValue());
-    }
-
-    private boolean isNumber(String num){
-        String regex="\\d";
-        Pattern p= Pattern.compile(regex);
-        return p.matcher(num).find();
-    }
-
-    private boolean isEven(int num){
-        if(num%2==0){
-            return true;
-        }else{
-            return false;
+        else {
+            listener.onCameraPositionConfigured(cameraPosition.getValue());
         }
     }
 

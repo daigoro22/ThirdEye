@@ -16,12 +16,16 @@
 
     <string name="key_autofocus_preference">keylistpreference</string>
     <string name="key_size_preference">keysizepreference</string>
-    <string name="key_text_preference">keytextpreference</string>
     <string name="key_focus_preference">keyfocuspreference</string>
+    <string name="key_availableimagesizes_preference">keyavailableimagesizespreference</string>
+
     <string name="key_cameraposition_preference">keycamerapositionpreference</string>
     <string name="key_devidelongitude_preference">keydevidelongitudepreference</string>
     <string name="key_devidelatitude_preference">keydevidelatitudepreference</string>
-    <string name="key_availableimagesizes_preference">keyavailableimagesizespreference</string>
-    <string name="key_defaultimagesize_preference">keydefaultimagesizepreference</string>
+
+    <string name="key_receiveimagewidth_preference">keyreceiveimagewidthpreference</string>
+    <string name="key_receiveimageheight_preference">keyreceiveimageheightpreference</string>
+    <string name="key_isServer_preference">keyisserver</string>
+
 
 </resources>

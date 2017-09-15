@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 
 import com.example.abedaigorou.thirdeye.R;
 
+import java.util.regex.Pattern;
+
 /**
  * Created by abedaigorou on 2017/08/31.
  */
@@ -29,5 +31,19 @@ public class ConfigureUtils
 
     public static int getConfiguredAFMode(Context context,SharedPreferences sp){
         return Integer.parseInt(sp.getString(context.getString(R.string.key_autofocus_preference),"0"));
+    }
+
+    public static boolean isNumber(String num){
+        String regex="\\d";
+        Pattern p= Pattern.compile(regex);
+        return p.matcher(num).find();
+    }
+
+    public static boolean isEven(int num){
+        if(num%2==0){
+            return true;
+        }else{
+            return false;
+        }
     }
 }

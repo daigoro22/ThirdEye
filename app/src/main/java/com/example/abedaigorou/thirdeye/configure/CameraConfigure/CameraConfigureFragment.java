@@ -115,12 +115,6 @@ public class CameraConfigureFragment extends PreferenceFragment implements Share
         ListPreference afList=(ListPreference)findPreference(getString(R.string.key_autofocus_preference));
         SeekbarPreference focusSeekbar=(SeekbarPreference)findPreference(getString(R.string.key_focus_preference));
 
-        // 取得方法
-        final String text = sp.getString(getString(R.string.key_text_preference),"");
-        final String val=sp.getString(getString(R.string.key_autofocus_preference),"");
-
-        findPreference(getString(R.string.key_text_preference)).setSummary(text+val);
-
         afList.setSummary(afList.getEntry());
         sizeList.setSummary(sizeList.getValue());
         focusSeekbar.setSummary("");

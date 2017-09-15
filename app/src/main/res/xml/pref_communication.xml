@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <EditTextPreference
+        android:defaultValue="0"
+        android:key="@string/key_receiveimagewidth_preference"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="800"
+        android:title="受信画像の幅" />
+    <EditTextPreference
+        android:defaultValue="0"
+        android:key="@string/key_receiveimageheight_preference"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="600"
+        android:title="受信画像の高さ" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="@string/key_isServer_preference"
+        android:summaryOn="サーバー"
+        android:summaryOff="クライアント"
+        android:title="通信方法" />
 </PreferenceScreen>
