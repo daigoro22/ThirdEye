@@ -1,3 +1,25 @@
 <resources>
     <string name="app_name">ThirdEye</string>
+
+    <string name="af0">OFF</string>
+    <string name="af1">AUTO</string>
+    <string name="af2">MACRO</string>
+    <string name="af3">CONTINUOUS_VIDEO</string>
+    <string name="af4">CONTINUOUS_PICTURE</string>
+    <string name="af5">EDOF</string>
+
+    <string name="size0">800x600</string>
+
+    <string name="focusdist0">50</string>
+
+    <string name="camerapos0">25</string>
+
+    <string name="key_autofocus_preference">keylistpreference</string>
+    <string name="key_size_preference">keysizepreference</string>
+    <string name="key_text_preference">keytextpreference</string>
+    <string name="key_focus_preference">keyfocuspreference</string>
+    <string name="key_cameraposition_preference">keycamerapositionpreference</string>
+    <string name="key_devidelongitude_preference">keydevidelongitudepreference</string>
+    <string name="key_devidelatitude_preference">keydevidelatitudepreference</string>
+
 </resources>

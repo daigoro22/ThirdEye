@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
+import android.graphics.Paint;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -25,7 +26,10 @@ import android.util.Log;
 import android.util.Range;
 import android.util.Size;
 
+import com.example.abedaigorou.thirdeye.configure.ConfigureUtils;
+
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -34,22 +38,30 @@ import java.util.Arrays;
 
 public class CaptureManager {
     private static CaptureManager instance;
-    private int width, height;
+    private static int mWidth, mHeight;
     private Context context;
     public final String TAG = "CaptureManager";
-    private String CAMERANUM="0";
-    final int bufferSize=1048576;
-    private byte[][] currentImageData=new byte[3][bufferSize];
-    private byte[][] currentImageDataBuffer=new byte[3][bufferSize];
+    private String CAMERANUM = "0";
+    final int bufferSize = 1048576;
+    private byte[][] currentImageData = new byte[3][bufferSize];
+    private byte[][] currentImageDataBuffer = new byte[3][bufferSize];
     Bundle currentBundle;
+    private String[] availableImageSize, availableFpsRange;
+    private int hardwareLebel=-1;
+    private static float maxFocus=-1f;
     private int imageSize;
-    private boolean isCapturing=false;
+    private boolean isCapturing = false;
     private CaptureEventListener listener;
+
+    private int AFMODE=0;
+    private float LENSDIST=0;
 
     CameraDevice.StateCallback cameraDeviceStateCallback;
     ImageReader.OnImageAvailableListener imageAvailableListener;
     CameraCaptureSession.StateCallback cameraCaptureSessionStateCallback;
     CameraCaptureSession.CaptureCallback cameraCaptureSessionCaptureCallback;
+    CameraManager.AvailabilityCallback cameraManagerAvailabilityCallback;
+
     ImageReader imageReader;
     CameraManager cameraManager;
     CameraDevice cameraDevice;
@@ -57,26 +69,29 @@ public class CaptureManager {
     CaptureRequest.Builder captureBuilder;
     HandlerThread thread;
     Handler handler;
-    ByteBuffer bufferY,bufferU,bufferV;
+    ByteBuffer bufferY, bufferU, bufferV;
     Image image;
     Bitmap bitmap;
+    boolean isreboot=false;
 
 
-    public static CaptureManager newInstance(int width, int height, Context context,CaptureEventListener listener) {
-        instance = new CaptureManager(width, height, context,listener);
+    public static CaptureManager newInstance(Context context,CaptureEventListener listener) {
+        instance = new CaptureManager(context,listener);
         return instance;
     }
 
-    private CaptureManager(final int width, final int height, Context context, final CaptureEventListener listener) {
-        this.width = width;
-        this.height = height;
+    public static CaptureManager getInstance(){
+        return instance;
+    }
+
+    private CaptureManager(Context context, final CaptureEventListener listener) {
         this.context = context;
-        this.listener=listener;
+        this.listener = listener;
 
         thread = new HandlerThread("Camera2 background");
         thread.start();
         handler = new Handler(thread.getLooper());
-        currentBundle=new Bundle();
+        currentBundle = new Bundle();
 
         //permissionチェック→してなかったらダイアログ表示
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -87,25 +102,40 @@ public class CaptureManager {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-            ActivityCompat.requestPermissions((Activity)context, new String[]{
+            ActivityCompat.requestPermissions((Activity) context, new String[]{
                     Manifest.permission.CAMERA
             }, 1);
         }
 
         cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
 
+        getAvailableDatas();
+        cameraManagerAvailabilityCallback=new CameraManager.AvailabilityCallback() {
+            @Override
+            public void onCameraAvailable(@NonNull String cameraId) {
+                super.onCameraAvailable(cameraId);
+                Log.i(TAG,"onCameraAvailable");
+                if(isreboot){
+                    start(cameraId,mWidth,mHeight,AFMODE);
+                }
+            }
+        };
+
+        cameraManager.registerAvailabilityCallback(cameraManagerAvailabilityCallback,handler);
+
         cameraDeviceStateCallback = new CameraDevice.StateCallback() {
             @Override
             public void onOpened(@NonNull CameraDevice camera) {
                 Log.i(TAG, "onOpened");
                 try {
-                    camera.createCaptureSession(Arrays.asList(imageReader.getSurface()), cameraCaptureSessionStateCallback, null);
-                    isCapturing=true;
+                    camera.createCaptureSession(Arrays.asList(imageReader.getSurface()), cameraCaptureSessionStateCallback, handler);
+                    isCapturing = true;
 
                 } catch (CameraAccessException e) {
                     e.printStackTrace();
                 }
                 cameraDevice = camera;
+                listener.onOpened();
             }
 
             @Override
@@ -115,7 +145,7 @@ public class CaptureManager {
 
             @Override
             public void onError(@NonNull CameraDevice camera, int error) {
-                isCapturing=false;
+                isCapturing = false;
                 Log.i(TAG, "onError");
             }
         };
@@ -127,49 +157,27 @@ public class CaptureManager {
                 captureSession = session;
                 captureBuilder = null;
                 try {
-                    CameraCharacteristics cc=cameraManager.getCameraCharacteristics(CAMERANUM);
-                    Range<Integer>[] a=cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
-                    for (Range<Integer> b:a)
-                        Log.i("fps",b.toString());
-                    StreamConfigurationMap stm=cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-                    Size[] ss=stm.getOutputSizes(ImageFormat.YUV_420_888);
-                    for(Size s:ss)
-                        Log.i("size",s.toString());
                     //シャッター遅延ゼロでキャプチャ
                     //captureBuilder=cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
                     captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                    captureBuilder.addTarget(imageReader.getSurface());
-
-                    captureSession.setRepeatingBurst(Arrays.asList(captureBuilder.build()),null,handler);
-
-                    captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+                    captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,AFMODE);
+                    if(AFMODE==0&&hardwareLebel==1){
+                        captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE,LENSDIST);
+                    }
                     captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
                     captureBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_OFF);
                     captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,16666666l);
                     captureBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,new Range<>(60,60));
                     captureBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION,16666666l);
+                    captureBuilder.addTarget(imageReader.getSurface());
 
-                    /*handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            while(isCapturing){
-                                try {
-                                    captureSession.capture(captureBuilder.build(),cameraCaptureSessionCaptureCallback,null);
-                                } catch (CameraAccessException e) {
-                                    e.printStackTrace();
-                                }
-                                try {
-                                    Thread.sleep(interval);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    });*/
+                    captureSession.setRepeatingBurst(Arrays.asList(captureBuilder.build()), null, handler);
+                    //resetBuilder();
 
                 } catch (CameraAccessException e) {
                     e.printStackTrace();
                 }
+                listener.onConfigured();
             }
 
             @Override
@@ -184,42 +192,10 @@ public class CaptureManager {
                 super.onCaptureCompleted(session, request, result);
             }
         };
-
-        imageReader = ImageReader.newInstance(width, height,ImageFormat.YUV_420_888,1);
-
-
-        imageAvailableListener = new ImageReader.OnImageAvailableListener() {
-            //int Yb,Ub,Vb;
-            byte[] data;
-            @Override
-            public void onImageAvailable(ImageReader reader) {
-                Log.i(TAG, "onImageAvailable");
-                image=reader.acquireNextImage();
-                data=ImageUtils.ImageToByte(image);
-                listener.onTakeImage(data);
-
-                /*bufferY = image.getPlanes()[0].getBuffer();
-                bufferU=image.getPlanes()[1].getBuffer();
-                bufferV=image.getPlanes()[2].getBuffer();
-
-                Yb=bufferY.remaining();
-                Ub=bufferU.remaining();
-                Vb=bufferV.remaining();
-
-
-                //remaining:最初から最後の要素までの数
-                imageSize=bufferY.remaining();
-                bufferY.get(currentImageDataBuffer[0],0,Yb);
-                bufferU.get(currentImageDataBuffer[1],Yb,Ub);
-                bufferV.get(currentImageDataBuffer[2],Yb+Ub,Vb);*/
-                //System.arraycopy(currentImageDataBuffer,0,currentImageData,0,imageSize);
-                image.close();
-            }
-        };
-        imageReader.setOnImageAvailableListener(imageAvailableListener,handler);
+        isreboot=false;
     }
 
-    public void start() {
+    public void start(String cameraId,int width,int height,int afMode) {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -230,16 +206,182 @@ public class CaptureManager {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+        isCapturing=true;
+        mWidth=width;
+        mHeight=height;
+        AFMODE=afMode;
 
-        try {
-            cameraManager.openCamera(CAMERANUM, cameraDeviceStateCallback,handler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
+        imageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 1);
+
+        imageAvailableListener = new ImageReader.OnImageAvailableListener() {
+            //int Yb,Ub,Vb;
+            byte[] data;
+
+            @Override
+            public void onImageAvailable(ImageReader reader) {
+                //Log.i(TAG, "onImageAvailable");
+                image = reader.acquireNextImage();
+                data = ImageUtils.ImageToByte(image);
+                listener.onTakeImage(data);
+                //listener.onFocusPointTouched();
+                image.close();
+            }
+        };
+        imageReader.setOnImageAvailableListener(imageAvailableListener, handler);
+
+        if(CAMERANUM.equals(cameraId)&&cameraDeviceStateCallback!=null) {
+            try {
+                cameraManager.openCamera(CAMERANUM, cameraDeviceStateCallback, handler);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+    private void getAvailableDatas(){
+        if (availableFpsRange == null && availableImageSize == null&&maxFocus==-1f&&hardwareLebel==-1) {
+            CameraCharacteristics cc = null;
+            try {
+                cc = cameraManager.getCameraCharacteristics(CAMERANUM);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
+            Range<Integer>[] a = cc.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+            StreamConfigurationMap stm = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            Size[] ss = stm.getOutputSizes(ImageFormat.YUV_420_888);
+
+            hardwareLebel=cc.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+
+            ArrayList<String> temp = new ArrayList<>();
+
+            for (Size s : ss) {
+                temp.add(s.toString());
+                Log.i(TAG, s.toString());
+            }
+            availableImageSize = temp.toArray(new String[0]);
+            temp.clear();
+
+            for (Range<Integer> b : a) {
+                temp.add(b.toString());
+                Log.i(TAG, b.toString());
+            }
+            availableFpsRange = temp.toArray(new String[0]);
+
+            Float lens=cc.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+
+            if(lens==null) {
+                float[] length = cc.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+                for (float l : length)
+                    Log.i(TAG, String.valueOf(l));
+                maxFocus = length[0];
+            }else{
+                Log.i(TAG,String.valueOf(lens));
+                maxFocus=lens;
+            }
+            temp.clear();
+        }
+    }
+
+    public int getHardwareLebel(){
+        return hardwareLebel;
+    }
+
+
+    public void stop() {
+        isCapturing=false;
+        if (captureSession != null) {
+            captureSession.close();
+            cameraDevice.close();
+        }
+    }
+
+    public void reboot(){
+        isreboot=true;
+        stop();
+    }
+
+    public void setAFMode(final int afMode){
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                AFMODE=afMode;
+                reboot();
+            }
+        });
+    }
+
+    public void setImageSize(final String imageSize) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (imageSize == null)
+                    return;
+
+                int[] sizes = ConfigureUtils.getSplitedInt(imageSize, "x");
+                mWidth = sizes[0];
+                mHeight = sizes[1];
+
+                reboot();
+                if(imageReader!=null) {
+                    imageReader.close();
+                }
+                imageReader = ImageReader.newInstance(mWidth, mHeight, ImageFormat.YUV_420_888, 1);
+                imageReader.setOnImageAvailableListener(imageAvailableListener, handler);
+
+            }
+        });
+    }
+
+    public void setFocusDistance(final float dist){
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if(AFMODE==0){
+                    LENSDIST=dist;
+                    reboot();
+                }else{
+                    Log.i(TAG,"AutoFocus is not OFF");
+                }
+            }
+        });
+    }
+
+    public boolean getIsCapturing(){
+        return isCapturing;
+    }
+
+    public void setListener(CaptureEventListener listener){
+        this.listener=listener;
     }
 
     public int getImageSize(){
         return imageSize;
+    }
+
+    public int getAFMODE(){
+        return AFMODE;
+    }
+
+    public float getLENSDIST(){
+        return LENSDIST;
+    }
+
+    public static int getWidth(){
+        return mWidth;
+    }
+
+    public static int getHeight(){
+        return mHeight;
+    }
+
+    public String[] getAvailableImageSize(){
+        return availableImageSize;
+    }
+
+    public float getMaxFocus(){return maxFocus;}
+
+    public String[] getAvailableFpsRange(){
+        return availableFpsRange;
     }
 
     public Bitmap getBitmap(){
@@ -257,20 +399,11 @@ public class CaptureManager {
         return currentImageData;
     }
 
-    /*public Bundle getCurrentBundle(){
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                System.arraycopy(currentImageDataBuffer,0,currentImageData,0,imageSize);
-                currentBundle.putByteArray("data",currentImageData);
-                currentBundle.putInt("length",imageSize);
-            }
-        });
-        return currentBundle;
-    }*/
 
-    /*public Bitmap getCurrentBmp(){
-        return BitmapFactory.decodeByteArray(currentImageData, 0, currentImageData.length);
-    }*/
+    public interface CaptureEventListener {
+        void onTakeImage(byte[] data);
+        void onConfigured();
+        void onOpened();
+    }
 }
 

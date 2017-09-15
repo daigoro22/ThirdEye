@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="entry_autofocus">
+        <item>@string/af0</item>
+        <item>@string/af1</item>
+        <item>@string/af2</item>
+        <item>@string/af3</item>
+        <item>@string/af4</item>
+        <item>@string/af5</item>
+    </array>
+
+    <string-array name="entry_af_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
+
+    <array name="entry_imagesize">
+        <item>@string/size0</item>
+    </array>
+
+    <string-array name="entry_is_values">
+        <item>@string/size0</item>
+    </string-array>
+
+
+</resources>

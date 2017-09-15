@@ -1,0 +1,31 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:defaultValue="@string/app_name"
+        android:key="@string/key_text_preference"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="Edit text preference" />
+
+    <ListPreference
+        android:defaultValue="0"
+        android:entries="@array/entry_autofocus"
+        android:entryValues="@array/entry_af_values"
+        android:key="@string/key_autofocus_preference"
+        android:title="オートフォーカス" />
+
+    <ListPreference
+        android:defaultValue="@string/size0"
+        android:entries="@array/entry_imagesize"
+        android:entryValues="@array/entry_is_values"
+        android:key="@string/key_size_preference"
+        android:title="画像サイズ" />
+
+    <com.example.abedaigorou.thirdeye.configure.SeekbarPreference
+        android:key="@string/key_focus_preference"
+        android:title="焦点距離"
+        android:summary="@string/focusdist0"
+        android:defaultValue="50"
+        />
+
+</PreferenceScreen>
