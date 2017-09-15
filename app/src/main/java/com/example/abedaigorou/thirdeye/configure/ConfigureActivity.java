@@ -8,10 +8,15 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.AppLaunchChecker;
 import android.util.Log;
 
 import com.example.abedaigorou.thirdeye.CaptureManager;
@@ -30,7 +35,11 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
-public class ConfigureActivity extends Activity implements VRConfigureFragment.VRConfigureEventListener,CameraConfigureFragment.CameraConfigureEventListener,PreviewFragment.PreviewFragmentEventListener
+import java.util.HashSet;
+import java.util.Set;
+
+public class ConfigureActivity extends Activity implements VRConfigureFragment.VRConfigureEventListener,CameraConfigureFragment.CameraConfigureEventListener,
+        PreviewFragment.PreviewFragmentEventListener
 {
     private Bitmap bitmap;
     private int width,height,afMode;
@@ -40,11 +49,13 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
     GLPreviewFragment glPreviewFragment;
     VRConfigureFragment vrConfigureFragment;
     private CaptureManager manager;
+    private CaptureManager.CaptureEventListener listener;
     private final String TAG="ConfigureActivity";
     public final static String INTENTTAG="Intent_ConfigureActivity";
     public final static String BUNDLETAG="Bundle_ConfigureActivity";
     public final static int REQUEST_CODE_CAMERA=0;
     public final static int REQUEST_CODE_VR=1;
+    public final static int REQUEST_CODE_FIRSTTIME=2;
     private SharedPreferences sharedPreferences;
     private int requestCode;
     private static ConfigureActivity instance;
@@ -80,6 +91,7 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                 Fragment fragment2=  getFragmentManager().findFragmentById(R.id.container2);
 
                 switch (requestCode){
+                    case REQUEST_CODE_FIRSTTIME:
                     case REQUEST_CODE_CAMERA:
 
                         if(fragment1!=null&&fragment1 instanceof PreviewFragment){
@@ -95,10 +107,6 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                             configureFragment=CameraConfigureFragment.createInstance(1920,1080);
                             transaction.add(R.id.container2,configureFragment);
                         }
-                        int[] sizes=ConfigureUtils.getConfiguredSize(getApplicationContext(),sharedPreferences);
-                        width=sizes[0];
-                        height=sizes[1];
-                        afMode=ConfigureUtils.getConfiguredAFMode(getApplicationContext(),sharedPreferences);
                         break;
 
                     case REQUEST_CODE_VR:
@@ -180,14 +188,13 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
 
     @Override
     public void onCameraConfigureViewCreated() {
-        manager=CaptureManager.getInstance();
-        manager.setListener(new CaptureManager.CaptureEventListener() {
+        listener=new CaptureManager.CaptureEventListener() {
             @Override
             public void onTakeImage(final byte[] data) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mYuvMat=ImageUtils.ByteToMat(data,width,height);
+                        mYuvMat = ImageUtils.ByteToMat(data, width, height);
                         Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
                         Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
                         bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
@@ -206,17 +213,49 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
             public void onOpened() {
 
             }
-        });
+        };
+        if(requestCode==REQUEST_CODE_FIRSTTIME){
+            //初回起動
+            manager=CaptureManager.newInstance(this,listener);
+            SharedPreferences.Editor editor=sharedPreferences.edit();
+            Set<String> sizesSet=new HashSet<>();
+            String[] stsize=manager.getAvailableImageSize();
 
-        if (configureFragment != null) {
-            configureFragment.setImageSizes(manager.getAvailableImageSize());
-            configureFragment.setMaxFocus(manager.getMaxFocus());
+            for(String e:stsize)
+                sizesSet.add(e);
+
+            //デフォルト画像サイズ(最小)、デフォルトAFモード(AFOFF)、利用可能画像サイズ
+            editor.putString(getString(R.string.key_size_preference),stsize[stsize.length-1]);
+            editor.putString(getString(R.string.key_autofocus_preference),"0");
+            editor.putStringSet(getString(R.string.key_availableimagesizes_preference),sizesSet);
+            editor.apply();
+        }else{
+            //二回目以降
+            manager=CaptureManager.getInstance();
+            manager.setListener(listener);
         }
+
+        configureFragment.setImageSizes(manager.getAvailableImageSize());
+        configureFragment.setMaxFocus(manager.getMaxFocus());
         if(manager.getHardwareLebel()==2){
             configureFragment.setEnabled(false,R.string.key_focus_preference);
         }
-        if(!manager.getIsCapturing()){
+
+        int[] isize=ConfigureUtils.getConfiguredSize(getApplicationContext(),sharedPreferences);
+        width=isize[0];
+        height=isize[1];
+        afMode=ConfigureUtils.getConfiguredAFMode(getApplicationContext(),sharedPreferences);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // パーミッションが必要な処理
+            Log.i(TAG,"permissionAccepted");
             manager.start("0",width,height,afMode);
+        } else {
+            // パーミッションが得られなかった時
+            // 処理を中断する・エラーメッセージを出す・アプリケーションを終了する等
         }
     }
 

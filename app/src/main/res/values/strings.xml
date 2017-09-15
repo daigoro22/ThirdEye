@@ -21,5 +21,7 @@
     <string name="key_cameraposition_preference">keycamerapositionpreference</string>
     <string name="key_devidelongitude_preference">keydevidelongitudepreference</string>
     <string name="key_devidelatitude_preference">keydevidelatitudepreference</string>
+    <string name="key_availableimagesizes_preference">keyavailableimagesizespreference</string>
+    <string name="key_defaultimagesize_preference">keydefaultimagesizepreference</string>
 
 </resources>

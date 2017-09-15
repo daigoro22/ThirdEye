@@ -25,7 +25,7 @@ public class CameraConfigureFragment extends PreferenceFragment implements Share
     private static String KEY_MAX_HEIGHT="KEY_MAX_HEIGHT";
     private String[] sizes;
     private float maxFocus;
-    private int maxWidth,maxHeight,defaultWidth,defaultHeight;
+    private int maxWidth,maxHeight;
     private final String TAG = "CameraConfigureFragment";
     private CameraConfigureEventListener listener;
     private SharedPreferences sharedPreferences;
@@ -58,11 +58,9 @@ public class CameraConfigureFragment extends PreferenceFragment implements Share
         if(sizes!=null) {
             this.sizes=sizes;
             ListPreference list=(ListPreference)findPreference(getString(R.string.key_size_preference));
-            int[] defsize= ConfigureUtils.getSplitedInt(sizes[sizes.length-1],"x");
-            defaultWidth=defsize[0];
-            defaultHeight=defsize[1];
             list.setDefaultValue(sizes[sizes.length-1]);
             list.setEntries(getAdjSizes());
+            list.setValue(sizes[sizes.length-1]);
             list.setEntryValues(getAdjSizes());
         }
     }
@@ -91,6 +89,7 @@ public class CameraConfigureFragment extends PreferenceFragment implements Share
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        Log.i(TAG,"onViewCreated");
         super.onViewCreated(view, savedInstanceState);
         listener.onCameraConfigureViewCreated();
     }
@@ -133,6 +132,7 @@ public class CameraConfigureFragment extends PreferenceFragment implements Share
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Log.i(TAG,"onSharedPreferenceChanged");
         setSummaries(sharedPreferences);
     }
 
@@ -162,28 +162,6 @@ public class CameraConfigureFragment extends PreferenceFragment implements Share
 
     public void setEnabled(boolean enabled,String key){
         findPreference(key).setEnabled(enabled);
-    }
-
-    public int getAfMode(){
-        return Integer.parseInt(((ListPreference)findPreference(getString(R.string.key_autofocus_preference))).getValue());
-    }
-
-    public int getWidth(){
-        String val=((ListPreference)findPreference(getString(R.string.key_size_preference))).getValue();
-        if(val==null){
-            return defaultWidth;
-        }
-        int[] size=ConfigureUtils.getSplitedInt(val,"x");
-        return size[0];
-    }
-
-    public int getHeight(){
-        String val=((ListPreference)findPreference(getString(R.string.key_size_preference))).getValue();
-        if(val==null){
-            return defaultHeight;
-        }
-        int[] size=ConfigureUtils.getSplitedInt(val,"x");
-        return size[1];
     }
 
     public interface CameraConfigureEventListener

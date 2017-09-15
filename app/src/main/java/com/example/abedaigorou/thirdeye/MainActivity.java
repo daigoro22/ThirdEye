@@ -37,9 +37,9 @@ public class MainActivity extends AppCompatActivity {
     final static int PORT_DEFAULT = 8001;   // 待受ポート番号
     private String HOST="";
     private int PORT=0;
-    private int width;//176;
-    private int height;//144;
-    private int size;
+    private int width=176;//176;
+    private int height=144;//144;
+    private int size=176*(144+144/2);
     private int afMode;
     private String TAG="MainActivity";
     //final static int size=777600;
@@ -65,8 +65,7 @@ public class MainActivity extends AppCompatActivity {
         editText2.setText(String.valueOf(PORT_DEFAULT));
         mainHandler = new Handler(getMainLooper());
 
-
-        listener=new CaptureManager.CaptureEventListener() {
+        listener = new CaptureManager.CaptureEventListener() {
             @Override
             public void onTakeImage(final byte[] data) {
                 udpManager.sendData(data);
@@ -95,31 +94,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        captureManager = CaptureManager.newInstance(this,listener);
-        String[] defsizes= captureManager.getAvailableImageSize();
-        int[] isize;
-
-        //初回起動かどうか
-        if(AppLaunchChecker.hasStartedFromLauncher(this)) {
-            isize=ConfigureUtils.getConfiguredSize(getApplicationContext(),prefs);
-        }else{
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(getString(R.string.key_size_preference), defsizes[defsizes.length - 1]);
-            editor.putString(getString(R.string.key_autofocus_preference), "0");
-            editor.apply();
-            editor.commit();
-            isize=ConfigureUtils.getSplitedInt(defsizes[defsizes.length-1],"x");
-        }
-        AppLaunchChecker.onActivityCreate(this);
-
-
-        width=isize[0];
-        height=isize[1];
-        afMode=0;
-        size = width * (height + height / 2);
-        imageData = new byte[size];
-
-        udpManager=new UDPManager(new CommunicationEventListener() {
+        udpManager = new UDPManager(new CommunicationEventListener() {
             @Override
             public void onConnect(String mes) {
 
@@ -127,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onConnected(String mes) {
-                showToast(mes+"側で接続");
+                showToast(mes + "側で接続");
             }
 
             @Override
@@ -140,34 +115,50 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mYuvMat=ImageUtils.ByteToMat(getter,width,height);
+                        mYuvMat = ImageUtils.ByteToMat(getter, width, height);
                         Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
                         Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
                         bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
                         Utils.matToBitmap(rgbaMatOut, bitmap);
-                        if((vrActivity=VRActivity.getInstance())!=null) {
+                        if ((vrActivity = VRActivity.getInstance()) != null) {
                             vrActivity.setImageBitmap(bitmap);
                         }
                     }
                 });
-                if(vrActivity==null)
+                if (vrActivity == null)
                     setImage(bitmap);
             }
-        },size);
+        }, size);
     }
 
     @Override
     public void onResume(){
         super.onResume();
-        captureManager.setListener(listener);
+        //listener再設定
+        captureManager=CaptureManager.getInstance();
+        if(captureManager!=null) {
+            captureManager.setListener(listener);
+        }
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, new LoaderCallbackInterface() {
             @Override
             public void onManagerConnected(int status) {
                 if(status== LoaderCallbackInterface.SUCCESS) {
                     Log.i("a", "success");
                     showToast("接続OK");
-                    rgbaMatOut = new Mat();
-                    bgrMat = new Mat(height, width, CvType.CV_8UC4);
+                    initCameraInfo();
+                    if (!AppLaunchChecker.hasStartedFromLauncher(instance)) {
+                        //初回起動
+                        AppLaunchChecker.onActivityCreate(instance);
+                        Intent intent=new Intent(getApplicationContext(),ConfigureActivity.class);
+                        intent.putExtra(ConfigureActivity.INTENTTAG,ConfigureActivity.REQUEST_CODE_FIRSTTIME);
+                        startActivity(intent);
+                    }else{
+                        //二回目以降、起動時のみ
+                        if(captureManager==null) {
+                            captureManager = CaptureManager.newInstance(instance, listener);
+                            captureManager.start("0", width, height, afMode);
+                        }
+                    }
                 }
             }
 
@@ -177,6 +168,22 @@ public class MainActivity extends AppCompatActivity {
                 showToast("お待ち下さい");
             }
         });
+    }
+
+    private void initCameraInfo(){
+        //preferenceからサイズ,AFMODE取得
+        int[] isize = ConfigureUtils.getConfiguredSize(instance, prefs);
+
+        if(isize.length<2)
+            return;
+
+        width = isize[0];
+        height = isize[1];
+        afMode = ConfigureUtils.getConfiguredAFMode(instance, prefs);
+        size = width * (height + height / 2);
+        imageData = new byte[size];
+        rgbaMatOut = new Mat();
+        bgrMat = new Mat(height, width, CvType.CV_8UC4);
     }
 
     @Override
