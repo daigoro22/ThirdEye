@@ -148,15 +148,13 @@ public class MainActivity extends AppCompatActivity {
                     initCameraInfo();
                     if (!AppLaunchChecker.hasStartedFromLauncher(instance)) {
                         //初回起動
-                        AppLaunchChecker.onActivityCreate(instance);
                         Intent intent=new Intent(getApplicationContext(),ConfigureActivity.class);
                         intent.putExtra(ConfigureActivity.INTENTTAG,ConfigureActivity.REQUEST_CODE_FIRSTTIME);
-                        startActivity(intent);
+                        startActivityForResult(intent,0);
                     }else{
                         //二回目以降、起動時のみ
                         if(captureManager==null) {
                             captureManager = CaptureManager.newInstance(instance, listener);
-                            captureManager.start("0", width, height, afMode);
                         }
                     }
                 }
@@ -168,6 +166,15 @@ public class MainActivity extends AppCompatActivity {
                 showToast("お待ち下さい");
             }
         });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        if(resultCode==RESULT_OK){
+            AppLaunchChecker.onActivityCreate(instance);
+        }else{
+            finish();
+        }
     }
 
     private void initCameraInfo(){
@@ -239,4 +246,6 @@ public class MainActivity extends AppCompatActivity {
             }
             });
     }
+
+
 }

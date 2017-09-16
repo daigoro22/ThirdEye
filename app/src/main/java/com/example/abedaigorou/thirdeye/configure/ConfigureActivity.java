@@ -21,6 +21,7 @@ import android.util.Log;
 
 import com.example.abedaigorou.thirdeye.CaptureManager;
 import com.example.abedaigorou.thirdeye.ImageUtils;
+import com.example.abedaigorou.thirdeye.MainActivity;
 import com.example.abedaigorou.thirdeye.R;
 import com.example.abedaigorou.thirdeye.configure.CameraConfigure.CameraConfigureFragment;
 import com.example.abedaigorou.thirdeye.configure.CameraConfigure.PreviewFragment;
@@ -74,6 +75,33 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
 
         bitmap=null;
         instance=this;
+
+        listener=new CaptureManager.CaptureEventListener() {
+            @Override
+            public void onTakeImage(final byte[] data) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mYuvMat = ImageUtils.ByteToMat(data, width, height);
+                        Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
+                        Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
+                        bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
+                        Utils.matToBitmap(rgbaMatOut, bitmap);
+                        previewFragment.setImageData(bitmap);
+                    }
+                });
+            }
+
+            @Override
+            public void onConfigured() {
+
+            }
+
+            @Override
+            public void onOpened() {
+
+            }
+        };
     }
 
     public static ConfigureActivity getInstance(){
@@ -96,7 +124,6 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                 switch (requestCode){
                     case REQUEST_CODE_FIRSTTIME:
                     case REQUEST_CODE_CAMERA:
-
                         if(fragment1!=null&&fragment1 instanceof PreviewFragment){
                             previewFragment=(PreviewFragment)fragment1;
                         }else{
@@ -146,6 +173,7 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
     @Override
     public void onResume(){
         super.onResume();
+        Log.i(TAG,"onResume");
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, new LoaderCallbackInterface() {
             @Override
             public void onManagerConnected(int status) {
@@ -153,8 +181,22 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                     Log.i("a", "success");
                     rgbaMatOut = new Mat();
                     bgrMat = new Mat(height, width, CvType.CV_8UC4);
-                    init();
 
+                    if (requestCode==REQUEST_CODE_FIRSTTIME){
+                        //初回起動
+                        manager=CaptureManager.newInstance(instance,listener);
+                    }
+                    else if(requestCode==REQUEST_CODE_CAMERA){
+                        Log.i(TAG,"二回目以降");
+                        //二回目以降
+                        fetchImageDatafromPreference();
+                        if((manager=CaptureManager.getInstance())==null){
+                            manager=CaptureManager.newInstance(instance,listener);
+                        }
+                        manager.setListener(listener);
+                        manager.start("0",width,height,afMode);
+                        init();
+                    }
                 }
             }
 
@@ -163,6 +205,13 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                 Log.i("a","install");
             }
         });
+    }
+
+    @Override
+    public void onPause(){
+        super.onPause();
+        Log.i(TAG,"onPause");
+        manager.stop();
     }
 
     @Override
@@ -196,68 +245,17 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
 
     @Override
     public void onPreviewViewCreated() {
-        Log.i(TAG,"onViewCreated");
+        Log.i(TAG,"onPreviewViewCreated");
     }
 
     @Override
     public void onCameraConfigureViewCreated() {
-        listener=new CaptureManager.CaptureEventListener() {
-            @Override
-            public void onTakeImage(final byte[] data) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mYuvMat = ImageUtils.ByteToMat(data, width, height);
-                        Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
-                        Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
-                        bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
-                        Utils.matToBitmap(rgbaMatOut, bitmap);
-                        previewFragment.setImageData(bitmap);
-                    }
-                });
-            }
-
-            @Override
-            public void onConfigured() {
-
-            }
-
-            @Override
-            public void onOpened() {
-
-            }
-        };
-        if(requestCode==REQUEST_CODE_FIRSTTIME){
-            //初回起動
-            manager=CaptureManager.newInstance(this,listener);
-            SharedPreferences.Editor editor=sharedPreferences.edit();
-            Set<String> sizesSet=new HashSet<>();
-            String[] stsize=manager.getAvailableImageSize();
-
-            for(String e:stsize)
-                sizesSet.add(e);
-
-            //デフォルト画像サイズ(最小)、デフォルトAFモード(AFOFF)、利用可能画像サイズ
-            editor.putString(getString(R.string.key_size_preference),stsize[stsize.length-1]);
-            editor.putString(getString(R.string.key_autofocus_preference),"0");
-            editor.putStringSet(getString(R.string.key_availableimagesizes_preference),sizesSet);
-            editor.apply();
-        }else{
-            //二回目以降
-            manager=CaptureManager.getInstance();
-            manager.setListener(listener);
-        }
-
+        Log.i(TAG,"onCameraConfigureViewCreated");
         cameraConfigureFragment.setImageSizes(manager.getAvailableImageSize());
         cameraConfigureFragment.setMaxFocus(manager.getMaxFocus());
         if(manager.getHardwareLebel()==2){
             cameraConfigureFragment.setEnabled(false,R.string.key_focus_preference);
         }
-
-        int[] isize=ConfigureUtils.getConfiguredSize(getApplicationContext(),sharedPreferences);
-        width=isize[0];
-        height=isize[1];
-        afMode=ConfigureUtils.getConfiguredAFMode(getApplicationContext(),sharedPreferences);
     }
 
     @Override
@@ -265,11 +263,42 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // パーミッションが必要な処理
             Log.i(TAG,"permissionAccepted");
+            setResult(RESULT_OK);
+            initPreference();
+            fetchImageDatafromPreference();
             manager.start("0",width,height,afMode);
+            init();
         } else {
             // パーミッションが得られなかった時
-            // 処理を中断する・エラーメッセージを出す・アプリケーションを終了する等
+            finish();
         }
+    }
+
+
+    private void initPreference(){
+        SharedPreferences.Editor editor=sharedPreferences.edit();
+        Set<String> sizesSet=new HashSet<>();
+        String[] stsize=manager.getAvailableImageSize();
+
+        for(String e:stsize)
+            sizesSet.add(e);
+
+        //デフォルト画像サイズ(最小)、デフォルトAFモード(AFOFF)、利用可能画像サイズ
+        editor.putString(getString(R.string.key_size_preference),stsize[stsize.length-1]);
+        editor.putString(getString(R.string.key_autofocus_preference),"0");
+        editor.putStringSet(getString(R.string.key_availableimagesizes_preference),sizesSet);
+
+        editor.putString(getString(R.string.key_receiveimagewidth_preference),getString(R.string.defReceiveWidth));
+        editor.putString(getString(R.string.key_receiveimageheight_preference),getString(R.string.defReceiveHeight));
+        editor.apply();
+    }
+
+    //画像情報をSharedPreferenceから取得
+    private void fetchImageDatafromPreference(){
+        int[] isize=ConfigureUtils.getConfiguredSize(getApplicationContext(),sharedPreferences);
+        width=isize[0];
+        height=isize[1];
+        afMode=ConfigureUtils.getConfiguredAFMode(getApplicationContext(),sharedPreferences);
     }
 
     @Override

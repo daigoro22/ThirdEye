@@ -16,6 +16,8 @@
 
     <string name="defIPaddr">192.168.1.1</string>
     <string name="defPort">8001</string>
+    <string name="defReceiveWidth">800</string>
+    <string name="defReceiveHeight">600</string>
 
     <string name="key_autofocus_preference">keylistpreference</string>
     <string name="key_size_preference">keysizepreference</string>

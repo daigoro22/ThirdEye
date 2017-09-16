@@ -72,7 +72,7 @@ public class CaptureManager {
     ByteBuffer bufferY, bufferU, bufferV;
     Image image;
     Bitmap bitmap;
-    boolean isreboot=false;
+    private boolean isreboot=false;
 
 
     public static CaptureManager newInstance(Context context,CaptureEventListener listener) {
@@ -117,6 +117,7 @@ public class CaptureManager {
                 Log.i(TAG,"onCameraAvailable");
                 if(isreboot){
                     start(cameraId,mWidth,mHeight,AFMODE);
+                    isreboot=false;
                 }
             }
         };
@@ -206,6 +207,9 @@ public class CaptureManager {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+        if(isCapturing)
+            return;
+
         isCapturing=true;
         mWidth=width;
         mHeight=height;
@@ -288,16 +292,20 @@ public class CaptureManager {
 
 
     public void stop() {
-        isCapturing=false;
-        if (captureSession != null) {
-            captureSession.close();
-            cameraDevice.close();
+        if(isCapturing) {
+            isCapturing = false;
+            if (captureSession != null) {
+                captureSession.close();
+                cameraDevice.close();
+            }
         }
     }
 
     public void reboot(){
-        isreboot=true;
-        stop();
+        if(isCapturing) {
+            isreboot = true;
+            stop();
+        }
     }
 
     public void setAFMode(final int afMode){
@@ -336,7 +344,7 @@ public class CaptureManager {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                if(AFMODE==0){
+                if(AFMODE==CaptureRequest.CONTROL_AF_MODE_OFF){
                     LENSDIST=dist;
                     reboot();
                 }else{

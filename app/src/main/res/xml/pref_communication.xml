@@ -2,14 +2,14 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <EditTextPreference
-        android:defaultValue="0"
+        android:defaultValue="@string/defReceiveWidth"
         android:key="@string/key_receiveimagewidth_preference"
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:summary="800"
         android:title="受信画像の幅" />
     <EditTextPreference
-        android:defaultValue="0"
+        android:defaultValue="@string/defReceiveHeight"
         android:key="@string/key_receiveimageheight_preference"
         android:selectAllOnFocus="true"
         android:singleLine="true"
