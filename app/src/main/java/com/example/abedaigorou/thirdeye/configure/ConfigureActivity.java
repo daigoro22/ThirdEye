@@ -292,6 +292,7 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
 
     }
 
+
     @Override
     public void onCommunicationConfigureViewCreated() {
         
@@ -304,6 +305,16 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
 
     @Override
     public void onReceiveImageHeightConfigured(int height) {
+
+    }
+
+    @Override
+    public void onIpAddrConfigured(String addr) {
+
+    }
+
+    @Override
+    public void onPortConfigured(int port) {
 
     }
 

@@ -44,7 +44,7 @@ public class CameraConfigureFragment extends PreferenceFragment implements Share
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.pref_camera);
-
+        sharedPreferences=getPreferenceScreen().getSharedPreferences();
         Bundle args = getArguments();
 
         if (args != null) {
@@ -60,7 +60,7 @@ public class CameraConfigureFragment extends PreferenceFragment implements Share
             ListPreference list=(ListPreference)findPreference(getString(R.string.key_size_preference));
             list.setDefaultValue(sizes[sizes.length-1]);
             list.setEntries(getAdjSizes());
-            list.setValue(sizes[sizes.length-1]);
+            list.setValue(sharedPreferences.getString(getString(R.string.key_size_preference),sizes[sizes.length-1]));
             list.setEntryValues(getAdjSizes());
         }
     }

@@ -30,6 +30,12 @@ public class VRConfigureFragment extends PreferenceFragment implements SharedPre
     public void onCreate(Bundle bundle){
         super.onCreate(bundle);
         addPreferencesFromResource(R.xml.pref_vr);
+        devideLatitude=(EditTextPreference)findPreference(getString(R.string.key_devidelatitude_preference));
+        devideLongitude=(EditTextPreference)findPreference(getString(R.string.key_devidelongitude_preference));
+        cameraPosition=(SeekbarPreference)findPreference(getString(R.string.key_cameraposition_preference));
+
+        devideLatitude.setOnPreferenceChangeListener(ConfigureUtils.getIsEvenListener(getContext()));
+        devideLongitude.setOnPreferenceChangeListener(ConfigureUtils.getIsEvenListener(getContext()));
     }
 
     @Override
@@ -68,36 +74,15 @@ public class VRConfigureFragment extends PreferenceFragment implements SharedPre
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        devideLatitude=(EditTextPreference)findPreference(getString(R.string.key_devidelatitude_preference));
-        devideLongitude=(EditTextPreference)findPreference(getString(R.string.key_devidelongitude_preference));
-        cameraPosition=(SeekbarPreference)findPreference(getString(R.string.key_cameraposition_preference));
-
+        Log.i(TAG,"onSharedPreferenceChanged");
         if(key.equals(getString(R.string.key_devidelatitude_preference))) {
-            if (ConfigureUtils.isNumber(devideLatitude.getText())) {
-                int parse;
-                if (ConfigureUtils.isEven(parse = Integer.parseInt(devideLatitude.getText()))) {
-                    listener.onDevideLatitudeConfigured(parse);
-                    devideLatitude.setSummary(devideLatitude.getText());
-                } else {
-                    Toast.makeText(getContext(), "奇数は設定できません", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getContext(), "文字は設定できません", Toast.LENGTH_SHORT).show();
-            }
+            listener.onDevideLatitudeConfigured(Integer.parseInt(devideLatitude.getText()));
+            devideLatitude.setSummary(devideLatitude.getText());
         }
 
         else if(key.equals(getString(R.string.key_devidelongitude_preference))) {
-            if (ConfigureUtils.isNumber(devideLongitude.getText())) {
-                int parse;
-                if (ConfigureUtils.isEven(parse = Integer.parseInt(devideLongitude.getText()))) {
-                    listener.onDevideLongitudeConfigured(parse);
-                    devideLongitude.setSummary(devideLongitude.getText());
-                } else {
-                    Toast.makeText(getContext(), "奇数は設定できません", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getContext(), "文字は設定できません", Toast.LENGTH_SHORT).show();
-            }
+            listener.onDevideLongitudeConfigured(Integer.parseInt(devideLongitude.getText()));
+            devideLongitude.setSummary(devideLongitude.getText());
         }
 
         else {

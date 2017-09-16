@@ -14,6 +14,9 @@
 
     <string name="camerapos0">25</string>
 
+    <string name="defIPaddr">192.168.1.1</string>
+    <string name="defPort">8001</string>
+
     <string name="key_autofocus_preference">keylistpreference</string>
     <string name="key_size_preference">keysizepreference</string>
     <string name="key_focus_preference">keyfocuspreference</string>
@@ -26,6 +29,8 @@
     <string name="key_receiveimagewidth_preference">keyreceiveimagewidthpreference</string>
     <string name="key_receiveimageheight_preference">keyreceiveimageheightpreference</string>
     <string name="key_isServer_preference">keyisserver</string>
+    <string name="key_ipaddr_preference">keyipaddrpreference</string>
+    <string name="key_port_preference">keyportpreference</string>
 
 
 </resources>

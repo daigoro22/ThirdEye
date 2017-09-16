@@ -4,8 +4,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
+import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.SwitchPreference;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -18,11 +20,10 @@ import com.example.abedaigorou.thirdeye.configure.ConfigureUtils;
 
 public class CommunicationConfigureFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener
 {
-    private EditTextPreference receiveImageWidth;
-    private EditTextPreference receiveImageHeight;
-    private SwitchPreference isServer;
-
+    private EditTextPreference receiveImageWidth,receiveImageHeight,ipAddr,port;
+    private final String TAG="ComConfigureFragment";
     private CommunicationConfigureEventListener listener;
+    private Preference.OnPreferenceChangeListener isEvenListener,isIpAddrListenter,isPortListener;
     @Override
     public void onAttach(Context context){
         super.onAttach(context);
@@ -35,6 +36,22 @@ public class CommunicationConfigureFragment extends PreferenceFragment implement
     public void onCreate(Bundle bundle){
         super.onCreate(bundle);
         addPreferencesFromResource(R.xml.pref_communication);
+        receiveImageWidth=(EditTextPreference)findPreference(getString(R.string.key_receiveimagewidth_preference));
+        receiveImageHeight=(EditTextPreference)findPreference(getString(R.string.key_receiveimageheight_preference));
+        ipAddr=(EditTextPreference)findPreference(getString(R.string.key_ipaddr_preference));
+        port=(EditTextPreference)findPreference(getString(R.string.key_port_preference));
+
+
+        isEvenListener=ConfigureUtils.getIsEvenListener(getContext());
+
+        isIpAddrListenter=ConfigureUtils.getIsIpAddrListener(getContext());
+
+        isPortListener=ConfigureUtils.getIsPortListener(getContext());
+
+        receiveImageWidth.setOnPreferenceChangeListener(isEvenListener);
+        receiveImageHeight.setOnPreferenceChangeListener(isEvenListener);
+        ipAddr.setOnPreferenceChangeListener(isIpAddrListenter);
+        port.setOnPreferenceChangeListener(isPortListener);
     }
 
     @Override
@@ -59,39 +76,27 @@ public class CommunicationConfigureFragment extends PreferenceFragment implement
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        receiveImageWidth=(EditTextPreference)findPreference(getString(R.string.key_receiveimagewidth_preference));
-        receiveImageHeight=(EditTextPreference)findPreference(getString(R.string.key_receiveimageheight_preference));
-        isServer=(SwitchPreference)findPreference(getString(R.string.key_isServer_preference));
-
+        Log.i(TAG,receiveImageWidth.getText());
         if(key.equals(getString(R.string.key_receiveimagewidth_preference))) {
-            if (ConfigureUtils.isNumber(receiveImageWidth.getText())) {
-                int parse;
-                if (ConfigureUtils.isEven(parse = Integer.parseInt(receiveImageWidth.getText()))) {
-                    listener.onReceiveImageWidthConfigured(parse);
-                    receiveImageWidth.setSummary(receiveImageWidth.getText());
-                } else {
-                    Toast.makeText(getContext(), "奇数は設定できません", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getContext(), "文字は設定できません", Toast.LENGTH_SHORT).show();
-            }
+            listener.onReceiveImageWidthConfigured(Integer.parseInt(receiveImageWidth.getText()));
+            receiveImageWidth.setSummary(receiveImageWidth.getText());
         }
 
         else if(key.equals(getString(R.string.key_receiveimageheight_preference))) {
-            if (ConfigureUtils.isNumber(receiveImageHeight.getText())) {
-                int parse;
-                if (ConfigureUtils.isEven(parse = Integer.parseInt(receiveImageHeight.getText()))) {
-                    listener.onReceiveImageHeightConfigured(parse);
-                    receiveImageHeight.setSummary(receiveImageHeight.getText());
-                } else {
-                    Toast.makeText(getContext(), "奇数は設定できません", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(getContext(), "文字は設定できません", Toast.LENGTH_SHORT).show();
-            }
+            listener.onReceiveImageHeightConfigured(Integer.parseInt(receiveImageHeight.getText()));
+            receiveImageHeight.setSummary(receiveImageHeight.getText());
+        }
+
+        else if(key.equals(getString(R.string.key_isServer_preference))){
+            listener.onIsServerConfigured();
+        }
+        else if(key.equals(getString(R.string.key_ipaddr_preference))){
+            listener.onIpAddrConfigured(ipAddr.getText());
+            ipAddr.setSummary(ipAddr.getText());
         }
         else{
-            listener.onIsServerConfigured();
+            listener.onPortConfigured(Integer.parseInt(port.getText()));
+            port.setSummary(port.getText());
         }
     }
 
@@ -99,6 +104,8 @@ public class CommunicationConfigureFragment extends PreferenceFragment implement
         void onCommunicationConfigureViewCreated();
         void onReceiveImageWidthConfigured(int width);
         void onReceiveImageHeightConfigured(int height);
+        void onIpAddrConfigured(String addr);
+        void onPortConfigured(int port);
         void onIsServerConfigured();
     }
 }

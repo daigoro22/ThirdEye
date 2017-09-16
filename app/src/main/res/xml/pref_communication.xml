@@ -21,4 +21,18 @@
         android:summaryOn="サーバー"
         android:summaryOff="クライアント"
         android:title="通信方法" />
+    <EditTextPreference
+        android:defaultValue="@string/defIPaddr"
+        android:summary="@string/defIPaddr"
+        android:key="@string/key_ipaddr_preference"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="IPアドレス" />
+    <EditTextPreference
+        android:defaultValue="@string/defPort"
+        android:summary="@string/defPort"
+        android:key="@string/key_port_preference"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="ポート番号" />
 </PreferenceScreen>
