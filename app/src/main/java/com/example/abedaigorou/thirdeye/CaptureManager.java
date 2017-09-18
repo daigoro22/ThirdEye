@@ -55,6 +55,9 @@ public class CaptureManager {
 
     private int AFMODE=0;
     private float LENSDIST=0;
+    private final int fps=30;
+    private double tpf=1f/fps;
+    private long sensorExposureTime=(long)(tpf*Math.pow(10,9));
 
     CameraDevice.StateCallback cameraDeviceStateCallback;
     ImageReader.OnImageAvailableListener imageAvailableListener;
@@ -87,6 +90,7 @@ public class CaptureManager {
     private CaptureManager(Context context, final CaptureEventListener listener) {
         this.context = context;
         this.listener = listener;
+        Log.i(TAG,String.valueOf(sensorExposureTime));
 
         thread = new HandlerThread("Camera2 background");
         thread.start();
@@ -167,9 +171,9 @@ public class CaptureManager {
                     }
                     captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
                     captureBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_OFF);
-                    captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,16666666l);
-                    captureBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,new Range<>(60,60));
-                    captureBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION,16666666l);
+                    captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,sensorExposureTime);
+                    captureBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,new Range<>(fps,fps));
+                    captureBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION,sensorExposureTime);
                     captureBuilder.addTarget(imageReader.getSurface());
 
                     captureSession.setRepeatingBurst(Arrays.asList(captureBuilder.build()), null, handler);
