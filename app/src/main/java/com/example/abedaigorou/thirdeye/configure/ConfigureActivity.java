@@ -182,9 +182,8 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                     rgbaMatOut = new Mat();
                     bgrMat = new Mat(height, width, CvType.CV_8UC4);
 
-                    if (requestCode==REQUEST_CODE_FIRSTTIME){
-                        //初回起動
-                        manager=CaptureManager.newInstance(instance,listener);
+                    if(requestCode==REQUEST_CODE_FIRSTTIME){
+                        CaptureManager.checkPermission(instance);
                     }
                     else if(requestCode==REQUEST_CODE_CAMERA){
                         Log.i(TAG,"二回目以降");
@@ -195,6 +194,8 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                         }
                         manager.setListener(listener);
                         manager.start("0",width,height,afMode);
+                        init();
+                    }else{
                         init();
                     }
                 }
@@ -211,7 +212,9 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
     public void onPause(){
         super.onPause();
         Log.i(TAG,"onPause");
-        manager.stop();
+        if(manager!=null) {
+            manager.stop();
+        }
     }
 
     @Override
@@ -263,11 +266,12 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // パーミッションが必要な処理
             Log.i(TAG,"permissionAccepted");
+            manager=CaptureManager.newInstance(instance,listener);
             setResult(RESULT_OK);
             initPreference();
             fetchImageDatafromPreference();
-            manager.start("0",width,height,afMode);
             init();
+            manager.start("0",width,height,afMode);
         } else {
             // パーミッションが得られなかった時
             finish();
