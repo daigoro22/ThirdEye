@@ -2,6 +2,7 @@ package com.example.abedaigorou.thirdeye;
 
 import android.graphics.ImageFormat;
 import android.media.Image;
+import android.util.Log;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -20,6 +21,8 @@ public class ImageUtils {
      * @param image Image in the YUV_420_888 format.
      * @return OpenCV Mat.
      */
+    private static String TAG="ImageUtils";
+    private static int bytesPerPixel=ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8;
     public static Mat imageToMat(Image image) {
         ByteBuffer buffer;
         int rowStride;
@@ -78,17 +81,15 @@ public class ImageUtils {
         return mat;
     }
 
-    public static byte[] ImageToByte(Image image){
+    public static byte[] ImageToByte(Image image,int width,int height){
         ByteBuffer buffer;
         int rowStride;
         int pixelStride;
-        int width = image.getWidth();
-        int height = image.getHeight();
         int offset = 0;
 
         Image.Plane[] planes = image.getPlanes();
-        byte[] data = new byte[image.getWidth() * image.getHeight() * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8];
-        byte[] rowData = new byte[planes[0].getRowStride()];
+        byte[] data = new byte[width*height*bytesPerPixel];
+        byte[] rowData = new byte[width];
 
         for (int i = 0; i < planes.length; i++) {
             buffer = planes[i].getBuffer();
@@ -99,7 +100,6 @@ public class ImageUtils {
             int w = (i == 0) ? width : width / 2;
             int h = (i == 0) ? height : height / 2;
             for (int row = 0; row < h; row++) {
-                int bytesPerPixel = ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8;
                 if (pixelStride == bytesPerPixel) {//Yのとき
                     int length = w * bytesPerPixel;
                     buffer.get(data, offset, length);
@@ -126,6 +126,7 @@ public class ImageUtils {
                         data[offset++] = rowData[col * pixelStride];//YUV420だったら２つまたいでサプサンプリング
                     }
                 }
+                Log.i(TAG,"offset"+String.valueOf(offset));
             }
         }
         return data;
