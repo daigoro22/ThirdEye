@@ -22,7 +22,18 @@ public class ImageUtils {
      * @return OpenCV Mat.
      */
     private static String TAG="ImageUtils";
-    private static int bytesPerPixel=ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8;
+    private static float bytesPerPixel=ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8f;
+    private static int width,height;
+    private static  byte[] data;
+    private static byte[] rowData;
+
+    public static void setWidthAndHeight(int _width,int _height){
+        width=_width;
+        height=_height;
+        data=new byte[(int)(width*height*bytesPerPixel)];
+        rowData= new byte[width];
+    }
+
     public static Mat imageToMat(Image image) {
         ByteBuffer buffer;
         int rowStride;
@@ -81,15 +92,13 @@ public class ImageUtils {
         return mat;
     }
 
-    public static byte[] ImageToByte(Image image,int width,int height){
+    public static byte[] ImageToByte(Image image){
         ByteBuffer buffer;
         int rowStride;
         int pixelStride;
         int offset = 0;
 
         Image.Plane[] planes = image.getPlanes();
-        byte[] data = new byte[width*height*bytesPerPixel];
-        byte[] rowData = new byte[width];
 
         for (int i = 0; i < planes.length; i++) {
             buffer = planes[i].getBuffer();
@@ -101,7 +110,7 @@ public class ImageUtils {
             int h = (i == 0) ? height : height / 2;
             for (int row = 0; row < h; row++) {
                 if (pixelStride == bytesPerPixel) {//Yのとき
-                    int length = w * bytesPerPixel;
+                    int length =(int)( w * bytesPerPixel);
                     buffer.get(data, offset, length);
 
                     // Advance buffer the remainder of the row stride, unless on the last row.
@@ -126,7 +135,6 @@ public class ImageUtils {
                         data[offset++] = rowData[col * pixelStride];//YUV420だったら２つまたいでサプサンプリング
                     }
                 }
-                Log.i(TAG,"offset"+String.valueOf(offset));
             }
         }
         return data;

@@ -229,7 +229,7 @@ public class CaptureManager {
             public void onImageAvailable(ImageReader reader) {
                 //Log.i(TAG, "onImageAvailable");
                 image = reader.acquireNextImage();
-                data = ImageUtils.ImageToByte(image,width,height);
+                data = ImageUtils.ImageToByte(image);
                 listener.onTakeImage(data);
                 //listener.onFocusPointTouched();
                 image.close();

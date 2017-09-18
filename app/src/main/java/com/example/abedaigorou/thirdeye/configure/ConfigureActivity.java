@@ -181,6 +181,7 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                     Log.i("a", "success");
                     rgbaMatOut = new Mat();
                     bgrMat = new Mat(height, width, CvType.CV_8UC4);
+                    ImageUtils.setWidthAndHeight(width,height);
 
                     if(requestCode==REQUEST_CODE_FIRSTTIME){
                         CaptureManager.checkPermission(instance);
@@ -230,6 +231,7 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
             height=sizes[1];
             manager.setImageSize(imageSize);
             bgrMat=new Mat(sizes[1],sizes[0], CvType.CV_8UC4);
+            ImageUtils.setWidthAndHeight(width,height);
         }
     }
 

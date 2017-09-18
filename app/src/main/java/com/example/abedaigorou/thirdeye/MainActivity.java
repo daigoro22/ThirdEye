@@ -188,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
         imageData = new byte[size];
         rgbaMatOut = new Mat();
         bgrMat = new Mat(receiveHeight, receiveWidth, CvType.CV_8UC4);
+        ImageUtils.setWidthAndHeight(width,height);
 
         receiveWidth=ConfigureUtils.getConfiguredIntValue(instance,R.string.key_receiveimagewidth_preference,"800");
         receiveHeight=ConfigureUtils.getConfiguredIntValue(instance,R.string.key_receiveimageheight_preference,"600");
