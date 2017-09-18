@@ -29,17 +29,18 @@ import org.opencv.imgproc.Imgproc;
 public class MainActivity extends AppCompatActivity {
     static MainActivity instance;
     ImageView imageView;
-    EditText editText,editText2;
     CaptureManager captureManager;
     CaptureManager.CaptureEventListener listener;
     public Handler mainHandler;
-    final static String HOST_DEFAULT = "192.168.1.2";
-    final static int PORT_DEFAULT = 8001;   // 待受ポート番号
     private String HOST="";
     private int PORT=0;
     private int width=176;//176;
     private int height=144;//144;
     private int size=176*(144+144/2);
+    private int receiveWidth=800;
+    private int receiveHeight=600;
+    private int receiveSize=800*(600+600/2);
+    private boolean isServer=false;
     private int afMode;
     private String TAG="MainActivity";
     //final static int size=777600;
@@ -58,11 +59,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         imageView = (ImageView) findViewById(R.id.imageView);
-        editText = (EditText) findViewById(R.id.editText);
-        editText2 = (EditText) findViewById(R.id.editText2);
-
-        editText.setText(HOST_DEFAULT);
-        editText2.setText(String.valueOf(PORT_DEFAULT));
         mainHandler = new Handler(getMainLooper());
 
         listener = new CaptureManager.CaptureEventListener() {
@@ -115,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mYuvMat = ImageUtils.ByteToMat(getter, width, height);
+                        mYuvMat = ImageUtils.ByteToMat(getter, receiveWidth, receiveHeight);
                         Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
                         Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
                         bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
@@ -145,7 +141,8 @@ public class MainActivity extends AppCompatActivity {
                 if(status== LoaderCallbackInterface.SUCCESS) {
                     Log.i("a", "success");
                     showToast("接続OK");
-                    initCameraInfo();
+                    resetPrefInfo();
+
                     if (!AppLaunchChecker.hasStartedFromLauncher(instance)) {
                         //初回起動
                         Intent intent=new Intent(getApplicationContext(),ConfigureActivity.class);
@@ -177,20 +174,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void initCameraInfo(){
+    private void resetPrefInfo(){
         //preferenceからサイズ,AFMODE取得
-        int[] isize = ConfigureUtils.getConfiguredSize(instance, prefs);
+        int[] isize = ConfigureUtils.getConfiguredSize(instance);
 
         if(isize.length<2)
             return;
 
         width = isize[0];
         height = isize[1];
-        afMode = ConfigureUtils.getConfiguredAFMode(instance, prefs);
+        afMode = ConfigureUtils.getConfiguredIntValue(instance,R.string.key_autofocus_preference,"0");
         size = width * (height + height / 2);
         imageData = new byte[size];
         rgbaMatOut = new Mat();
-        bgrMat = new Mat(height, width, CvType.CV_8UC4);
+        bgrMat = new Mat(receiveHeight, receiveWidth, CvType.CV_8UC4);
+
+        receiveWidth=ConfigureUtils.getConfiguredIntValue(instance,R.string.key_receiveimagewidth_preference,"800");
+        receiveHeight=ConfigureUtils.getConfiguredIntValue(instance,R.string.key_receiveimageheight_preference,"600");
+        receiveSize=receiveWidth*(receiveHeight+receiveHeight/2);
+        isServer=ConfigureUtils.getConfiguredIsServer(instance);
+        HOST=ConfigureUtils.getConfiguredStringValue(instance,R.string.key_ipaddr_preference,getString(R.string.defIPaddr));
+        PORT=ConfigureUtils.getConfiguredIntValue(instance,R.string.key_port_preference,getString(R.string.defPort));
     }
 
     @Override
@@ -209,23 +213,20 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void onClientConnect(View v){
-        HOST=editText.getText().toString();
-        PORT=Integer.valueOf(editText2.getText().toString());
-        udpManager.ClientConnect(HOST,PORT);
-        captureManager.start("0",width,height,0);
-    }
-
-    public void onServerConnect(View v){
-        HOST=editText.getText().toString();
-        PORT=Integer.valueOf(editText2.getText().toString());
-
-        udpManager.ServerConnect(PORT);
+    public void onConnectClick(View v){
+        if(isServer){
+            udpManager.setBufferAndPacketSize(receiveSize);
+            udpManager.ServerConnect(PORT);
+        }else{
+            udpManager.setBufferAndPacketSize(size);
+            udpManager.ClientConnect(HOST,PORT);
+            captureManager.start("0",width,height,0);
+        }
     }
 
     public void onDisconnectClick(View v){
-        udpManager.Disconnect();
         captureManager.stop();
+        udpManager.Disconnect();
     }
 
     public void onVRClicked(View v){

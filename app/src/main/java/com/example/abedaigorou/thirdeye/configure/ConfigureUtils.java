@@ -3,6 +3,7 @@ package com.example.abedaigorou.thirdeye.configure;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.widget.Toast;
 
 import com.example.abedaigorou.thirdeye.R;
@@ -24,6 +25,7 @@ public class ConfigureUtils
                     if (ConfigureUtils.isNumber(stNewValue)) {
                         int parse;
                         if (ConfigureUtils.isEven(parse = Integer.parseInt(stNewValue))) {
+                            preference.setSummary(stNewValue);
                             return true;
                         } else {
                             Toast.makeText(context, "奇数は設定できません", Toast.LENGTH_SHORT).show();
@@ -47,6 +49,7 @@ public class ConfigureUtils
                 if(newValue instanceof String) {
                     String stNewValue=(String)newValue;
                     if (ConfigureUtils.isIpAddr(stNewValue)) {
+                        preference.setSummary(stNewValue);
                         return true;
                     } else {
                         Toast.makeText(context, "IPアドレスのみ設定できます", Toast.LENGTH_SHORT).show();
@@ -66,6 +69,7 @@ public class ConfigureUtils
                 if(newValue instanceof String) {
                     String stNewValue=(String)newValue;
                     if (ConfigureUtils.isNumber(stNewValue)) {
+                        preference.setSummary(stNewValue);
                         return true;
                     } else {
                         Toast.makeText(context, "0~65535の整数のみ設定できます", Toast.LENGTH_SHORT).show();
@@ -89,13 +93,28 @@ public class ConfigureUtils
         return values;
     }
 
-    public static int[] getConfiguredSize(Context context,SharedPreferences sp){
+    public static int[] getConfiguredSize(Context context){
+        SharedPreferences sp=PreferenceManager.getDefaultSharedPreferences(context);
         String stsize=sp.getString(context.getString(R.string.key_size_preference),"");
         return getSplitedInt(stsize,"x");
     }
 
-    public static int getConfiguredAFMode(Context context,SharedPreferences sp){
-        return Integer.parseInt(sp.getString(context.getString(R.string.key_autofocus_preference),"0"));
+    public static boolean getConfiguredIsServer(Context context){
+        SharedPreferences sp=PreferenceManager.getDefaultSharedPreferences(context);
+        return sp.getBoolean(context.getString(R.string.key_isServer_preference),false);
+    }
+
+    public static int getConfiguredIntValue(Context context,int key,String defValue){
+        SharedPreferences sp=PreferenceManager.getDefaultSharedPreferences(context);
+        if(key==R.string.key_size_preference){
+            return -1;
+        }
+        return Integer.parseInt(sp.getString(context.getString(key),defValue));
+    }
+
+    public static String getConfiguredStringValue(Context context,int key,String defValue){
+        SharedPreferences sp=PreferenceManager.getDefaultSharedPreferences(context);
+        return sp.getString(context.getString(key),defValue);
     }
 
     public static boolean isNumber(String num){

@@ -299,10 +299,10 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
 
     //画像情報をSharedPreferenceから取得
     private void fetchImageDatafromPreference(){
-        int[] isize=ConfigureUtils.getConfiguredSize(getApplicationContext(),sharedPreferences);
+        int[] isize=ConfigureUtils.getConfiguredSize(getApplicationContext());
         width=isize[0];
         height=isize[1];
-        afMode=ConfigureUtils.getConfiguredAFMode(getApplicationContext(),sharedPreferences);
+        afMode=ConfigureUtils.getConfiguredIntValue(getApplicationContext(),R.string.key_autofocus_preference,"0");
     }
 
     @Override

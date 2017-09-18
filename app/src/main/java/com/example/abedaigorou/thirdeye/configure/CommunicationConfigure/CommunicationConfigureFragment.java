@@ -52,6 +52,11 @@ public class CommunicationConfigureFragment extends PreferenceFragment implement
         receiveImageHeight.setOnPreferenceChangeListener(isEvenListener);
         ipAddr.setOnPreferenceChangeListener(isIpAddrListenter);
         port.setOnPreferenceChangeListener(isPortListener);
+
+        receiveImageWidth.setSummary(ConfigureUtils.getConfiguredStringValue(getContext(),R.string.key_receiveimagewidth_preference,getString(R.string.defReceiveWidth)));
+        receiveImageHeight.setSummary(ConfigureUtils.getConfiguredStringValue(getContext(),R.string.key_receiveimageheight_preference,getString(R.string.defReceiveHeight)));
+        ipAddr.setSummary(ConfigureUtils.getConfiguredStringValue(getContext(),R.string.key_ipaddr_preference,getString(R.string.defIPaddr)));
+        port.setSummary(ConfigureUtils.getConfiguredStringValue(getContext(),R.string.key_port_preference,getString(R.string.defPort)));
     }
 
     @Override
@@ -79,12 +84,10 @@ public class CommunicationConfigureFragment extends PreferenceFragment implement
         Log.i(TAG,receiveImageWidth.getText());
         if(key.equals(getString(R.string.key_receiveimagewidth_preference))) {
             listener.onReceiveImageWidthConfigured(Integer.parseInt(receiveImageWidth.getText()));
-            receiveImageWidth.setSummary(receiveImageWidth.getText());
         }
 
         else if(key.equals(getString(R.string.key_receiveimageheight_preference))) {
             listener.onReceiveImageHeightConfigured(Integer.parseInt(receiveImageHeight.getText()));
-            receiveImageHeight.setSummary(receiveImageHeight.getText());
         }
 
         else if(key.equals(getString(R.string.key_isServer_preference))){
@@ -92,11 +95,9 @@ public class CommunicationConfigureFragment extends PreferenceFragment implement
         }
         else if(key.equals(getString(R.string.key_ipaddr_preference))){
             listener.onIpAddrConfigured(ipAddr.getText());
-            ipAddr.setSummary(ipAddr.getText());
         }
         else{
             listener.onPortConfigured(Integer.parseInt(port.getText()));
-            port.setSummary(port.getText());
         }
     }
 

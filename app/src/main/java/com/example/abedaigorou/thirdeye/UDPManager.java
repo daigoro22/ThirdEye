@@ -61,6 +61,11 @@ public class UDPManager
 
     public UDPManager(CommunicationEventListener listener,int bufferSize){
         this.listener=listener;
+        setBufferAndPacketSize(bufferSize);
+        //getterPacket=new byte[packetSize];
+    }
+
+    public void setBufferAndPacketSize(int bufferSize){
         this.bufferSize=bufferSize;
         sender=new byte[bufferSize];
         senderBuffer=new byte[bufferSize];
@@ -79,7 +84,6 @@ public class UDPManager
         getter=new byte[bufferSize];
         getterPacketBuffer=new byte[packetSize];
         maxIndexNum=bufferSize/packetSize;
-        //getterPacket=new byte[packetSize];
     }
 
     public void ServerConnect(int port){
