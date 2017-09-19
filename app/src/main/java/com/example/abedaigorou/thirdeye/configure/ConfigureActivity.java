@@ -82,7 +82,7 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mYuvMat = ImageUtils.ByteToMat(data, width, height);
+                        mYuvMat = ImageUtils.ByteToMat(data);
                         Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
                         Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
                         bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
@@ -226,13 +226,11 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
         if(sizes.length<2){
             return;
         }
-        if(!(sizes[0]==CaptureManager.getWidth()&&sizes[1]==CaptureManager.getHeight())) {
-            width=sizes[0];
-            height=sizes[1];
-            manager.setImageSize(imageSize);
-            bgrMat=new Mat(sizes[1],sizes[0], CvType.CV_8UC4);
-            ImageUtils.setWidthAndHeight(width,height);
-        }
+        width=sizes[0];
+        height=sizes[1];
+        manager.setImageSize(imageSize);
+        bgrMat=new Mat(sizes[1],sizes[0], CvType.CV_8UC4);
+        ImageUtils.setWidthAndHeight(width,height);
     }
 
     @Override

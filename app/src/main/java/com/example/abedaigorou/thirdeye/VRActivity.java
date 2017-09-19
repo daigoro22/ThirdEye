@@ -27,7 +27,7 @@ import static android.opengl.GLES20.GL_TEXTURE_2D;
 
 public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
     private static final String TAG="VRRobot";
-    private static final float CAMERA_Z = 10;
+    private static final float CAMERA_Z = 25;//10;
     private static VRActivity instance;
     public static final String sVertexShaderSource =
                     //"uniform mat4 wMatrix;" +

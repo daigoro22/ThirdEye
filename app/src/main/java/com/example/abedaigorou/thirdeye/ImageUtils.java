@@ -26,12 +26,14 @@ public class ImageUtils {
     private static int width,height;
     private static  byte[] data;
     private static byte[] rowData;
+    private static Mat mat;
 
     public static void setWidthAndHeight(int _width,int _height){
         width=_width;
         height=_height;
         data=new byte[(int)(width*height*bytesPerPixel)];
         rowData= new byte[width];
+        mat = new Mat(height + height / 2, width, CvType.CV_8UC1);//y成分+uv成分
     }
 
     public static Mat imageToMat(Image image) {
@@ -140,9 +142,8 @@ public class ImageUtils {
         return data;
     }
 
-    public static Mat ByteToMat(byte[] image, int width, int height) {
+    public static Mat ByteToMat(byte[] image) {
         // Finally, create the Mat.
-        Mat mat = new Mat(height + height / 2, width, CvType.CV_8UC1);//y成分+uv成分
         mat.put(0, 0, image);
         return mat;
     }
