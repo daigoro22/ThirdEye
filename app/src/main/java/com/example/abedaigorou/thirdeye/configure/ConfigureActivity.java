@@ -181,7 +181,7 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
                     Log.i("a", "success");
                     rgbaMatOut = new Mat();
                     bgrMat = new Mat(height, width, CvType.CV_8UC4);
-                    ImageUtils.setWidthAndHeight(width,height);
+                    //ImageUtils.setWidthAndHeight(width,height);
 
                     if(requestCode==REQUEST_CODE_FIRSTTIME){
                         CaptureManager.checkPermission(instance);
@@ -230,7 +230,7 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
         height=sizes[1];
         manager.setImageSize(imageSize);
         bgrMat=new Mat(sizes[1],sizes[0], CvType.CV_8UC4);
-        ImageUtils.setWidthAndHeight(width,height);
+        //ImageUtils.setWidthAndHeight(width,height);
     }
 
     @Override
@@ -270,7 +270,9 @@ public class ConfigureActivity extends Activity implements VRConfigureFragment.V
             setResult(RESULT_OK);
             initPreference();
             fetchImageDatafromPreference();
+            Log.i(TAG,String.valueOf(width)+":"+String.valueOf(height));
             init();
+            //ImageUtils.setWidthAndHeight(width,height);
             manager.start("0",width,height,afMode);
         } else {
             // パーミッションが得られなかった時

@@ -25,6 +25,7 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Range;
 import android.util.Size;
+import android.view.Surface;
 
 import com.example.abedaigorou.thirdeye.configure.ConfigureUtils;
 
@@ -55,7 +56,7 @@ public class CaptureManager {
 
     private int AFMODE=0;
     private float LENSDIST=0;
-    private final int fps=30;
+    private final int fps=60;
     private double tpf=1f/fps;
     private long sensorExposureTime=(long)(tpf*Math.pow(10,9));
 
@@ -76,7 +77,6 @@ public class CaptureManager {
     Image image;
     Bitmap bitmap;
     private boolean isreboot=false;
-
 
     public static CaptureManager newInstance(Context context,CaptureEventListener listener) {
         instance = new CaptureManager(context,listener);
@@ -169,11 +169,12 @@ public class CaptureManager {
                     if(AFMODE==0&&hardwareLebel==1){
                         captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE,LENSDIST);
                     }
+                    /*
                     captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
                     captureBuilder.set(CaptureRequest.CONTROL_MODE,CaptureRequest.CONTROL_MODE_OFF);
                     captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,sensorExposureTime);
                     captureBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,new Range<>(fps,fps));
-                    captureBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION,sensorExposureTime);
+                    captureBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION,sensorExposureTime);*/
                     captureBuilder.addTarget(imageReader.getSurface());
 
                     captureSession.setRepeatingBurst(Arrays.asList(captureBuilder.build()), null, handler);

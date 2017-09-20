@@ -9,6 +9,8 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.AppLaunchChecker;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -22,13 +24,14 @@ import org.opencv.android.InstallCallbackInterface;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.CvException;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 public class MainActivity extends AppCompatActivity {
     static MainActivity instance;
-    ImageView imageView;
+    private ImageView imageView;
     CaptureManager captureManager;
     CaptureManager.CaptureEventListener listener;
     public Handler mainHandler;
@@ -47,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     UDPManager udpManager;
     byte[] imageData;
     Mat rgbaMatOut,mYuvMat,bgrMat;
-    Bitmap bitmap;
+    Bitmap sendBitmap,receiveBitmap;
     VRActivity vrActivity;
     SharedPreferences prefs;
     int count=0;
@@ -68,15 +71,15 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        System.arraycopy(data, 0, imageData, 0, data.length);
+                        /*System.arraycopy(data, 0, imageData, 0, data.length);
                         mYuvMat = ImageUtils.ByteToMat(imageData);
                         Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
                         Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
-                        bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
-                        Utils.matToBitmap(rgbaMatOut, bitmap);
+                        //Log.i(TAG,"col:"+String.valueOf(bgrMat.cols())+"rows:"+bgrMat.rows());
+                        Utils.matToBitmap(rgbaMatOut, sendBitmap);*/
                     }
                 });
-                setImage(bitmap);
+                setImage(sendBitmap);
             }
 
             @Override
@@ -114,15 +117,14 @@ public class MainActivity extends AppCompatActivity {
                         mYuvMat = ImageUtils.ByteToMat(getter);
                         Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
                         Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
-                        bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
-                        Utils.matToBitmap(rgbaMatOut, bitmap);
+                        Utils.matToBitmap(rgbaMatOut, receiveBitmap);
                         if ((vrActivity = VRActivity.getInstance()) != null) {
-                            vrActivity.setImageBitmap(bitmap);
+                            vrActivity.setImageBitmap(receiveBitmap);
                         }
                     }
                 });
                 if (vrActivity == null)
-                    setImage(bitmap);
+                    setImage(receiveBitmap);
             }
         }, size);
     }
@@ -188,7 +190,10 @@ public class MainActivity extends AppCompatActivity {
         imageData = new byte[size];
         rgbaMatOut = new Mat();
         bgrMat = new Mat(receiveHeight, receiveWidth, CvType.CV_8UC4);
-        ImageUtils.setWidthAndHeight(width,height);
+
+        sendBitmap = Bitmap.createBitmap(width,height, Bitmap.Config.ARGB_8888);
+        receiveBitmap= Bitmap.createBitmap(receiveWidth,receiveHeight, Bitmap.Config.ARGB_8888);
+        //ImageUtils.setWidthAndHeight(width,height);
 
         receiveWidth=ConfigureUtils.getConfiguredIntValue(instance,R.string.key_receiveimagewidth_preference,"800");
         receiveHeight=ConfigureUtils.getConfiguredIntValue(instance,R.string.key_receiveimageheight_preference,"600");

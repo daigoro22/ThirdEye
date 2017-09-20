@@ -23,16 +23,13 @@ public class ImageUtils {
      */
     private static String TAG="ImageUtils";
     private static float bytesPerPixel=ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8f;
-    private static int width,height;
+    private static int width,height,rowStride=-1;
     private static  byte[] data;
     private static byte[] rowData;
     private static Mat mat;
 
-    public static void setWidthAndHeight(int _width,int _height){
-        width=_width;
-        height=_height;
+    private static void reloadDataAndMat(){
         data=new byte[(int)(width*height*bytesPerPixel)];
-        rowData= new byte[width];
         mat = new Mat(height + height / 2, width, CvType.CV_8UC1);//y成分+uv成分
     }
 
@@ -96,21 +93,35 @@ public class ImageUtils {
 
     public static byte[] ImageToByte(Image image){
         ByteBuffer buffer;
-        int rowStride;
         int pixelStride;
         int offset = 0;
 
         Image.Plane[] planes = image.getPlanes();
 
+        if(rowStride!=planes[0].getRowStride()){
+            Log.i(TAG,"change");
+            rowStride=planes[0].getRowStride();
+            rowData= new byte[rowStride];
+        }
+
+        if(width!=image.getWidth()){
+            width=image.getWidth();
+            reloadDataAndMat();
+        }
+        if(height!=image.getHeight()){
+            height=image.getHeight();
+            reloadDataAndMat();
+        }
+
         for (int i = 0; i < planes.length; i++) {
             buffer = planes[i].getBuffer();
-            rowStride = planes[i].getRowStride();
             pixelStride = planes[i].getPixelStride();
 
             //yのとき大きさ等倍,u,vのとき大きさ1/2
             int w = (i == 0) ? width : width / 2;
             int h = (i == 0) ? height : height / 2;
             for (int row = 0; row < h; row++) {
+                //Log.i(TAG,String.valueOf(rowStride));
                 if (pixelStride == bytesPerPixel) {//Yのとき
                     int length =(int)( w * bytesPerPixel);
                     buffer.get(data, offset, length);
