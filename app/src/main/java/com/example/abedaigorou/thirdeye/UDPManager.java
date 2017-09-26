@@ -44,6 +44,7 @@ public class UDPManager
     private int senderPacketNum,getterPacketNum;
     private int maxIndexNum,getterIndexNum=0;
     private boolean isDataDevided;
+    private int i;
 
     enum NODE_TYPE{
         TCPSERVER("TCPサーバー"),
@@ -69,7 +70,7 @@ public class UDPManager
         this.bufferSize=bufferSize;
         sender=new byte[bufferSize];
         senderBuffer=new byte[bufferSize];
-        if(bufferSize>64000){//データ分割するかどうか
+        if(bufferSize>64000-1){//データ分割するかどうか
             packetSize=64000;
             isDataDevided=true;
         }
@@ -220,6 +221,12 @@ public class UDPManager
         sendHandler=Util.GetNewHandler("SendThread");
     }
 
+    private void passSenderReference(byte[] data,int size){
+        for(i=1;i<size;i++){
+            senderPacketBuffer[i]=data[senderOffset+i];
+        }
+    }
+
     public void sendData(final byte[] data){
         if(sendHandler==null)
             return;
@@ -227,17 +234,17 @@ public class UDPManager
             @Override
             public void run() {
                 Sync_Send();
-                if((senderBuffer=data)==null)
+                if(data==null)
                     return;
-                System.arraycopy(senderBuffer,0,sender,0,senderBuffer.length);
+                //System.arraycopy(senderBuffer,0,sender,0,senderBuffer.length);
 
                 if (nodeType == NODE_TYPE.UDPCLIENT) {
                     //while(offset<) {
                     //senderDatagram.setData(sender, offset += packetSize, packetSize);
                     while (senderOffset+packetSize < bufferSize) {
                         senderPacketBuffer[0]=(byte)senderPacketNum;
-                        System.arraycopy(sender,senderOffset,senderPacketBuffer,1,packetSize-1);
-                        senderDatagram.setData(senderPacketBuffer,0,packetSize);
+                        passSenderReference(data,packetSize);
+                        senderDatagram.setData(senderPacketBuffer,0,senderPacketBuffer.length);
                         try {
                             SenderUdpSocket.send(senderDatagram);
                         } catch (IOException e) {
@@ -248,11 +255,11 @@ public class UDPManager
                     }
                     if(isDataDevided) {
                         senderPacketBuffer[0] = (byte) senderPacketNum;
-                        System.arraycopy(sender, senderOffset, senderPacketBuffer, 1, bufferSize - senderOffset);
+                        passSenderReference(data,bufferSize-senderOffset);
                         senderDatagram.setData(senderPacketBuffer, 0, bufferSize - senderOffset);
                     }else{
-                        System.arraycopy(sender,0,senderPacketBuffer,0,sender.length);
-                        senderDatagram.setData(senderBuffer,0,senderBuffer.length);
+                        passSenderReference(data,data.length);
+                        senderDatagram.setData(senderPacketBuffer,0,senderPacketBuffer.length);
                     }
                     try {
                         SenderUdpSocket.send(senderDatagram);
@@ -267,7 +274,6 @@ public class UDPManager
             }
         });
     }
-
 
     public void Disconnect(){
         run=false;
