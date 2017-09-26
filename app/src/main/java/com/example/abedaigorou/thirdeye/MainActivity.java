@@ -111,14 +111,18 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mYuvMat = ImageUtils.ByteToMat(getter, receiveWidth, receiveHeight);
-                        Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
-                        Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
-                        bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
-                        Utils.matToBitmap(rgbaMatOut, bitmap);
-                        if ((vrActivity = VRActivity.getInstance()) != null) {
-                            vrActivity.setImageBitmap(bitmap);
+                        if (isServer){
+                            mYuvMat = ImageUtils.ByteToMat(getter, receiveWidth, receiveHeight);
+                            Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
+                            Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
+                            bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
+                            Utils.matToBitmap(rgbaMatOut, bitmap);
+                            if ((vrActivity = VRActivity.getInstance()) != null) {
+                                vrActivity.setImageBitmap(bitmap);
+                        }else{
+
                         }
+                    }
                     }
                 });
                 if (vrActivity == null)
@@ -217,9 +221,11 @@ public class MainActivity extends AppCompatActivity {
         if(isServer){
             udpManager.setBufferAndPacketSize(receiveSize);
             udpManager.ServerConnect(PORT);
+            //udpManager.ClientConnect(HOST,PORT);
         }else{
             udpManager.setBufferAndPacketSize(size);
             udpManager.ClientConnect(HOST,PORT);
+            //udpManager.ServerConnect(PORT);
             captureManager.start("0",width,height,0);
         }
     }

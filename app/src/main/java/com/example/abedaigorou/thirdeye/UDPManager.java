@@ -236,14 +236,14 @@ public class UDPManager
                 Sync_Send();
                 if(data==null)
                     return;
-                //System.arraycopy(senderBuffer,0,sender,0,senderBuffer.length);
+                System.arraycopy(data,0,sender,0,data.length);
 
                 if (nodeType == NODE_TYPE.UDPCLIENT) {
                     //while(offset<) {
                     //senderDatagram.setData(sender, offset += packetSize, packetSize);
                     while (senderOffset+packetSize < bufferSize) {
                         senderPacketBuffer[0]=(byte)senderPacketNum;
-                        passSenderReference(data,packetSize);
+                        passSenderReference(sender,packetSize);
                         senderDatagram.setData(senderPacketBuffer,0,senderPacketBuffer.length);
                         try {
                             SenderUdpSocket.send(senderDatagram);
@@ -255,10 +255,10 @@ public class UDPManager
                     }
                     if(isDataDevided) {
                         senderPacketBuffer[0] = (byte) senderPacketNum;
-                        passSenderReference(data,bufferSize-senderOffset);
+                        passSenderReference(sender,bufferSize-senderOffset);
                         senderDatagram.setData(senderPacketBuffer, 0, bufferSize - senderOffset);
                     }else{
-                        passSenderReference(data,data.length);
+                        passSenderReference(sender,sender.length);
                         senderDatagram.setData(senderPacketBuffer,0,senderPacketBuffer.length);
                     }
                     try {
