@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         listener = new CaptureManager.CaptureEventListener() {
             @Override
             public void onTakeImage(final byte[] data) {
-                udpManager.sendData(data);
+                udpManager.SendData(data);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
                             if ((vrActivity = VRActivity.getInstance()) != null) {
                                 vrActivity.setImageBitmap(bitmap);
                             }
-                            udpManager.sendData("send".getBytes());
+                            udpManager.SendByte("a".getBytes());
                         }else{
                             try {
                                 Log.i("onRead",new String(getter,"UTF-8"));
@@ -229,12 +229,10 @@ public class MainActivity extends AppCompatActivity {
     public void onConnectClick(View v){
         if(isServer){
             udpManager.setBufferAndPacketSize(receiveSize);
-            udpManager.ServerConnect(PORT);
-            udpManager.ClientConnect(HOST,PORT);
+            udpManager.Connect(HOST,PORT,true);
         }else{
             udpManager.setBufferAndPacketSize(size);
-            udpManager.ClientConnect(HOST,PORT);
-            udpManager.ServerConnect(PORT);
+            udpManager.Connect(HOST,PORT,false);
             captureManager.start("0",width,height,0);
         }
     }

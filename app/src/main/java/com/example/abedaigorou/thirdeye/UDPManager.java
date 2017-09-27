@@ -30,10 +30,13 @@ public class UDPManager
     private byte[] sender;
     private byte[] senderBuffer;
     private byte[] senderPacketBuffer;
+    private byte[] byteSender;
     //private byte[] senderPacket;
     private byte[] getterBuffer;
     private byte[] getter;
     private byte[] getterPacketBuffer;
+    private byte[] simpleGetterBuffer;
+    private byte[] simpleGetter;
     //private byte[] getterPacket;
     private int senderOffset=0,getterOffset=0;
     private int packetSize;
@@ -70,6 +73,7 @@ public class UDPManager
         this.bufferSize=bufferSize;
         sender=new byte[bufferSize];
         senderBuffer=new byte[bufferSize];
+        byteSender=new byte[1];
         if(bufferSize>64000){//データ分割するかどうか
             packetSize=64000;
             isDataDevided=true;
@@ -84,60 +88,65 @@ public class UDPManager
         getterBuffer=new byte[bufferSize];
         getter=new byte[bufferSize];
         getterPacketBuffer=new byte[packetSize];
+        simpleGetter=new byte[1];
+        simpleGetterBuffer=new byte[1];
         maxIndexNum=bufferSize/packetSize;
     }
 
-    public void ServerConnect(int port){
-        nodeType= NODE_TYPE.UDPSERVER;
+    public void Connect(String host,int port,boolean isServer){
+        nodeType=isServer?NODE_TYPE.UDPSERVER:NODE_TYPE.UDPCLIENT;
+
         run=true;
         this.port=port;
+        this.address=host;
+
         listener.onConnect(nodeType.name);
+        //Getter
         try {
             GetterUdpSocket=new DatagramSocket(port);
         } catch (SocketException e) {
             e.printStackTrace();
         }
         getterDatagram=new DatagramPacket(getterBuffer,packetSize);
-        try {
-            GetterUdpSocket.setReceiveBufferSize(packetSize);
-            GetterUdpSocket.setSendBufferSize(packetSize);
 
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
-        listener.onConnected(nodeType.name);
-
-        Read();
-    }
-
-    public void ClientConnect(String addr,int port){
-        nodeType= NODE_TYPE.UDPCLIENT;
-        run=true;
-        this.port=port;
-        this.address=addr;
-        listener.onConnect(nodeType.name);
+        //Setter
         InetAddress address=null;
         try {
             address=InetAddress.getByName(this.address);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        listener.onConnect(nodeType.name);
         try {
             SenderUdpSocket=new DatagramSocket();
         } catch (IOException e) {
             e.printStackTrace();
         }
         senderDatagram=new DatagramPacket(sender,packetSize,address,port);
-        try {
-            SenderUdpSocket.setReceiveBufferSize(packetSize);
-            SenderUdpSocket.setSendBufferSize(packetSize);
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
         listener.onConnected(nodeType.name);
 
-        Send();
+        if(isServer){
+            try {
+                GetterUdpSocket.setReceiveBufferSize(packetSize);
+                GetterUdpSocket.setSendBufferSize(packetSize);
+                SenderUdpSocket.setReceiveBufferSize(1);
+                SenderUdpSocket.setSendBufferSize(1);
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
+            Send();
+            Read();
+        }else{
+            try {
+                GetterUdpSocket.setReceiveBufferSize(1);
+                GetterUdpSocket.setSendBufferSize(1);
+                SenderUdpSocket.setReceiveBufferSize(packetSize);
+                SenderUdpSocket.setSendBufferSize(packetSize);
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
+            Send();
+            SimpleRead();
+        }
     }
 
     private void Sync_Read(){
@@ -151,6 +160,24 @@ public class UDPManager
                 e.printStackTrace();
             }
         }
+    }
+
+    private void SimpleRead(){
+        (readHandler=Util.GetNewHandler("SimpleReadThread")).post(new Runnable() {
+            @Override
+            public void run() {
+                while(run) {
+                    getterDatagram.setData(simpleGetterBuffer, 0, 1);
+                        try {
+                            GetterUdpSocket.receive(getterDatagram);
+                            System.arraycopy(simpleGetterBuffer,0,simpleGetter,0,1);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    listener.onRead(simpleGetter);
+                }
+            }
+        });
     }
 
     private void Read(){
@@ -218,7 +245,24 @@ public class UDPManager
         sendHandler=Util.GetNewHandler("SendThread");
     }
 
-    public void sendData(final byte[] data){
+    public void SendByte(final byte data[]){
+        if(sendHandler==null)
+            return;
+        sendHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                System.arraycopy(data,0,byteSender,0,1);
+                senderDatagram.setData(byteSender,0,1);
+                try {
+                    SenderUdpSocket.send(senderDatagram);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void SendData(final byte[] data){
         if(sendHandler==null)
             return;
         sendHandler.post(new Runnable() {
