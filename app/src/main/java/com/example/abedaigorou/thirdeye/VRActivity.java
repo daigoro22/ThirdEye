@@ -79,6 +79,8 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
     float[] rotate=new float[16];
     private int frameCount=0;
     private Bitmap imageBitmap;
+    float[] eularAngle=new float[3];
+    float[] headAngle=new float[3];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +111,7 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
         Log.i(TAG,"onNewFrame");
         //ビュー座標変換行列
         Matrix.setLookAtM(camera,0,0f,0f,CAMERA_Z,0f,0f,-100f,0f,1.0f,0f);
+        headTransform.getEulerAngles(eularAngle,0);
         checkGLError("onReadyToDraw");
     }
 
@@ -263,6 +266,14 @@ public class VRActivity extends GvrActivity implements GvrView.StereoRenderer{
             Log.e(TAG, label + ": glError " + error);
             throw new RuntimeException(label + ": glError " + error);
         }
+    }
+
+    public float[] getHeadAngle(){
+        headAngle[0]=MathUtil.map(eularAngle[0],(float)Math.PI/2,-(float)Math.PI/2,180,0);
+        headAngle[1]=MathUtil.map(eularAngle[1],(float)Math.PI,-(float)Math.PI,360,0);
+        headAngle[2]=MathUtil.map(eularAngle[2],(float)Math.PI,-(float)Math.PI,360,0);
+        //Log.i("angle","x:"+String.valueOf(headAngle[0])+"y:"+String.valueOf(headAngle[1])+"z:"+String.valueOf(headAngle[2]));
+        return headAngle;
     }
 
     public void setImageBitmap(Bitmap bmp){

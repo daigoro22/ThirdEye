@@ -27,6 +27,7 @@ import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 
 public class MainActivity extends AppCompatActivity {
     static MainActivity instance;
@@ -51,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     Mat rgbaMatOut,mYuvMat,bgrMat;
     Bitmap bitmap;
     VRActivity vrActivity;
+    ServoController sc;
+    byte[] angleSender=new byte[1];
     SharedPreferences prefs;
     int count=0;
 
@@ -62,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
         prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         imageView = (ImageView) findViewById(R.id.imageView);
         mainHandler = new Handler(getMainLooper());
+        sc=new ServoController(180,10,0.5f,2.4f,48000);
+        sc.start();
 
         listener = new CaptureManager.CaptureEventListener() {
             @Override
@@ -123,14 +128,12 @@ public class MainActivity extends AppCompatActivity {
                             Utils.matToBitmap(rgbaMatOut, bitmap);
                             if ((vrActivity = VRActivity.getInstance()) != null) {
                                 vrActivity.setImageBitmap(bitmap);
+                                angleSender[0]=(byte)(vrActivity.getHeadAngle()[1]-90);
+                                udpManager.SendByte(angleSender);
                             }
-                            udpManager.SendByte("a".getBytes());
                         }else{
-                            try {
-                                Log.i("onRead",new String(getter,"UTF-8"));
-                            } catch (UnsupportedEncodingException e) {
-                                e.printStackTrace();
-                            }
+                            Log.i(TAG,String.valueOf(ByteBuffer.wrap(getter).get()));
+                            sc.setAngle(ByteBuffer.wrap(getter).get());
                         }
                     }
                 });
