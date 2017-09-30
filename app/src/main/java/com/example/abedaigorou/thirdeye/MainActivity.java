@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private int afMode;
     private int receiveCount=0;
     private long end=0,start=0;
+    private boolean sendFlag=true;
     private String TAG="MainActivity";
     //final static int size=777600;
     UDPManager udpManager;
@@ -74,7 +75,10 @@ public class MainActivity extends AppCompatActivity {
         listener = new CaptureManager.CaptureEventListener() {
             @Override
             public void onTakeImage(final byte[] data) {
-                udpManager.SendData(data);
+                if(sendFlag) {
+                    udpManager.SendData(data);
+                }
+                sendFlag=!sendFlag;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
