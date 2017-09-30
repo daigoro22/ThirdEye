@@ -16,6 +16,32 @@ import java.util.regex.Pattern;
 
 public class ConfigureUtils
 {
+    public static Preference.OnPreferenceChangeListener getIsUDPPacketSizeListener(final Context context){
+        return new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                if(newValue instanceof String) {
+                    String stNewValue=(String)newValue;
+                    if (ConfigureUtils.isNumber(stNewValue)) {
+                        if (Integer.parseInt(stNewValue)<=64000) {
+                            preference.setSummary(stNewValue);
+                            return true;
+                        } else {
+                            Toast.makeText(context, "64000byte以上は設定できません", Toast.LENGTH_SHORT).show();
+                            return false;
+                        }
+                    } else {
+                        Toast.makeText(context, "文字は設定できません", Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+                }else{
+                    return false;
+                }
+            }
+        };
+    }
+
+
     public static Preference.OnPreferenceChangeListener getIsEvenListener(final Context context){
         return new Preference.OnPreferenceChangeListener() {
             @Override

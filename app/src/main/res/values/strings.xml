@@ -18,6 +18,7 @@
     <string name="defPort">8001</string>
     <string name="defReceiveWidth">800</string>
     <string name="defReceiveHeight">600</string>
+    <string name="defPacketSize">64000</string>
 
     <string name="key_autofocus_preference">keylistpreference</string>
     <string name="key_size_preference">keysizepreference</string>
@@ -33,6 +34,7 @@
     <string name="key_isServer_preference">keyisserver</string>
     <string name="key_ipaddr_preference">keyipaddrpreference</string>
     <string name="key_port_preference">keyportpreference</string>
+    <string name="key_packetsize_preference">keypacketsizepreference</string>
 
 
 </resources>

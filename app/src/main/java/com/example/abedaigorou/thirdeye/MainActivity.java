@@ -44,7 +44,10 @@ public class MainActivity extends AppCompatActivity {
     private int receiveHeight=600;
     private int receiveSize=800*(600+600/2);
     private boolean isServer=false;
+    private int packetSize=64000;
     private int afMode;
+    private int receiveCount=0;
+    private long end=0,start=0;
     private String TAG="MainActivity";
     //final static int size=777600;
     UDPManager udpManager;
@@ -76,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if(!isServer) {
+                            rateCheck();
                             System.arraycopy(data, 0, imageData, 0, data.length);
                             mYuvMat = ImageUtils.ByteToMat(data, width, height);
                             Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
@@ -121,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if(isServer) {
+                            rateCheck();
                             mYuvMat = ImageUtils.ByteToMat(getter, receiveWidth, receiveHeight);
                             Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
                             Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
@@ -132,15 +137,15 @@ public class MainActivity extends AppCompatActivity {
                                 udpManager.SendByte(angleSender);
                             }
                         }else{
-                            Log.i(TAG,String.valueOf(ByteBuffer.wrap(getter).get()));
-                            sc.setAngle(ByteBuffer.wrap(getter).get());
+                            Log.i(TAG,String.valueOf(Util.bytesToInt(getter)));
+                            sc.setAngle(Util.bytesToInt(getter));
                         }
                     }
                 });
                 if (vrActivity == null)
                     setImage(bitmap);
             }
-        }, size);
+        }, size,packetSize);
     }
 
     @Override
@@ -211,6 +216,16 @@ public class MainActivity extends AppCompatActivity {
         isServer=ConfigureUtils.getConfiguredIsServer(instance);
         HOST=ConfigureUtils.getConfiguredStringValue(instance,R.string.key_ipaddr_preference,getString(R.string.defIPaddr));
         PORT=ConfigureUtils.getConfiguredIntValue(instance,R.string.key_port_preference,getString(R.string.defPort));
+        packetSize=ConfigureUtils.getConfiguredIntValue(instance,R.string.key_packetsize_preference,getString(R.string.defPacketSize));
+    }
+
+    private void rateCheck(){
+        if(receiveCount++>29) {
+            receiveCount = 0;
+            end = System.currentTimeMillis();
+            Log.i(TAG, "30frame in " + String.valueOf(end - start) + "ms");
+            start = System.currentTimeMillis();
+        }
     }
 
     @Override
@@ -231,10 +246,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void onConnectClick(View v){
         if(isServer){
-            udpManager.setBufferAndPacketSize(receiveSize);
+            udpManager.setBufferAndPacketSize(receiveSize,packetSize);
             udpManager.Connect(HOST,PORT,true);
         }else{
-            udpManager.setBufferAndPacketSize(size);
+            udpManager.setBufferAndPacketSize(size,packetSize);
             udpManager.Connect(HOST,PORT,false);
             captureManager.start("0",width,height,0);
         }

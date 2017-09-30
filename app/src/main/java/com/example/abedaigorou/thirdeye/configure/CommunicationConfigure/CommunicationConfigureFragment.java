@@ -20,10 +20,10 @@ import com.example.abedaigorou.thirdeye.configure.ConfigureUtils;
 
 public class CommunicationConfigureFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener
 {
-    private EditTextPreference receiveImageWidth,receiveImageHeight,ipAddr,port;
+    private EditTextPreference receiveImageWidth,receiveImageHeight,ipAddr,port,packetSize;
     private final String TAG="ComConfigureFragment";
     private CommunicationConfigureEventListener listener;
-    private Preference.OnPreferenceChangeListener isEvenListener,isIpAddrListenter,isPortListener;
+    private Preference.OnPreferenceChangeListener isEvenListener,isIpAddrListenter,isPortListener,isUDPPacketSizeListener;
     @Override
     public void onAttach(Context context){
         super.onAttach(context);
@@ -40,7 +40,7 @@ public class CommunicationConfigureFragment extends PreferenceFragment implement
         receiveImageHeight=(EditTextPreference)findPreference(getString(R.string.key_receiveimageheight_preference));
         ipAddr=(EditTextPreference)findPreference(getString(R.string.key_ipaddr_preference));
         port=(EditTextPreference)findPreference(getString(R.string.key_port_preference));
-
+        packetSize=(EditTextPreference)findPreference(getString(R.string.key_packetsize_preference));
 
         isEvenListener=ConfigureUtils.getIsEvenListener(getContext());
 
@@ -48,15 +48,19 @@ public class CommunicationConfigureFragment extends PreferenceFragment implement
 
         isPortListener=ConfigureUtils.getIsPortListener(getContext());
 
+        isUDPPacketSizeListener=ConfigureUtils.getIsUDPPacketSizeListener(getContext());
+
         receiveImageWidth.setOnPreferenceChangeListener(isEvenListener);
         receiveImageHeight.setOnPreferenceChangeListener(isEvenListener);
         ipAddr.setOnPreferenceChangeListener(isIpAddrListenter);
         port.setOnPreferenceChangeListener(isPortListener);
+        packetSize.setOnPreferenceChangeListener(isUDPPacketSizeListener);
 
         receiveImageWidth.setSummary(ConfigureUtils.getConfiguredStringValue(getContext(),R.string.key_receiveimagewidth_preference,getString(R.string.defReceiveWidth)));
         receiveImageHeight.setSummary(ConfigureUtils.getConfiguredStringValue(getContext(),R.string.key_receiveimageheight_preference,getString(R.string.defReceiveHeight)));
         ipAddr.setSummary(ConfigureUtils.getConfiguredStringValue(getContext(),R.string.key_ipaddr_preference,getString(R.string.defIPaddr)));
         port.setSummary(ConfigureUtils.getConfiguredStringValue(getContext(),R.string.key_port_preference,getString(R.string.defPort)));
+        packetSize.setSummary(ConfigureUtils.getConfiguredStringValue(getContext(),R.string.key_packetsize_preference,getString(R.string.defPacketSize)));
     }
 
     @Override
@@ -96,7 +100,7 @@ public class CommunicationConfigureFragment extends PreferenceFragment implement
         else if(key.equals(getString(R.string.key_ipaddr_preference))){
             listener.onIpAddrConfigured(ipAddr.getText());
         }
-        else{
+        else {
             listener.onPortConfigured(Integer.parseInt(port.getText()));
         }
     }

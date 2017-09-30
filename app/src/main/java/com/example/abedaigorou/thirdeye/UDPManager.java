@@ -63,19 +63,19 @@ public class UDPManager
         }
     }
 
-    public UDPManager(CommunicationEventListener listener,int bufferSize){
+    public UDPManager(CommunicationEventListener listener,int bufferSize,int packetSize){
         this.listener=listener;
-        setBufferAndPacketSize(bufferSize);
+        setBufferAndPacketSize(bufferSize,packetSize);
         //getterPacket=new byte[packetSize];
     }
 
-    public void setBufferAndPacketSize(int bufferSize){
+    public void setBufferAndPacketSize(int bufferSize,int packetSize){
         this.bufferSize=bufferSize;
         sender=new byte[bufferSize];
         senderBuffer=new byte[bufferSize];
         byteSender=new byte[1];
-        if(bufferSize>64000){//データ分割するかどうか
-            packetSize=64000;
+        if(bufferSize>packetSize){//データ分割するかどうか
+            this.packetSize=packetSize;
             isDataDevided=true;
         }
         else{

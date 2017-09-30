@@ -35,4 +35,11 @@
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:title="ポート番号" />
+    <EditTextPreference
+        android:defaultValue="@string/defPacketSize"
+        android:key="@string/key_packetsize_preference"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="@string/defPacketSize"
+        android:title="パケットサイズ" />
 </PreferenceScreen>
