@@ -1,6 +1,7 @@
 package com.example.abedaigorou.thirdeye;
 
 import android.os.Handler;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -47,6 +48,7 @@ public class UDPManager
     private int senderPacketNum,getterPacketNum;
     private int maxIndexNum,getterIndexNum=0;
     private boolean isDataDevided;
+    private String TAG="UDPManager";
 
 
     enum NODE_TYPE{
@@ -156,6 +158,7 @@ public class UDPManager
         while(!Arrays.equals(syncBuf,sync)) {
             try {
                 GetterUdpSocket.receive(getterDatagram);
+                Log.i(TAG,"failed to sync");
             } catch (IOException e) {
                 e.printStackTrace();
             }

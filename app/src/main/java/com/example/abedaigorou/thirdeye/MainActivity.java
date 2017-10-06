@@ -48,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
     private int afMode;
     private int receiveCount=0;
     private long end=0,start=0;
-    private boolean sendFlag=true;
     private String TAG="MainActivity";
     //final static int size=777600;
     UDPManager udpManager;
@@ -75,10 +74,7 @@ public class MainActivity extends AppCompatActivity {
         listener = new CaptureManager.CaptureEventListener() {
             @Override
             public void onTakeImage(final byte[] data) {
-                if(sendFlag) {
-                    udpManager.SendData(data);
-                }
-                sendFlag=!sendFlag;
+                udpManager.SendData(data);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -90,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
                             Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
                             bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
                             Utils.matToBitmap(rgbaMatOut, bitmap);
+                            int p=bitmap.getPixel(0,0);
                         }
                     }
                 });

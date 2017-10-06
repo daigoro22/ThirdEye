@@ -92,15 +92,16 @@ public class ImageUtils {
 
         for (int i = 0; i < planes.length; i++) {
             buffer = planes[i].getBuffer();
+            int r=buffer.remaining();
             rowStride = planes[i].getRowStride();
             pixelStride = planes[i].getPixelStride();
 
-            //yのとき大きさ等倍,u,vのとき大きさ1/2
+            //yのとき大きさ等倍,u,vのとき大きさ1/4
             int w = (i == 0) ? width : width / 2;
             int h = (i == 0) ? height : height / 2;
             for (int row = 0; row < h; row++) {
                 int bytesPerPixel = ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8;
-                if (pixelStride == bytesPerPixel) {//Yのとき
+                if (pixelStride == bytesPerPixel) {//
                     int length = w * bytesPerPixel;
                     buffer.get(data, offset, length);
 
@@ -111,7 +112,7 @@ public class ImageUtils {
                         buffer.position(buffer.position() + rowStride - length);
                     }
                     offset += length;
-                } else {//U,Vのとき
+                } else {//
 
                     // On the last row only read the width of the image minus the pixel stride
                     // plus one. Otherwise, this will throw a BufferUnderflowException because the
