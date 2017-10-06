@@ -5,6 +5,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 
 /**
  * Created by abedaigorou on 2017/09/20.
@@ -44,20 +45,30 @@ public class ServoController implements Runnable
         this.wait=wait;
     }
 
-    public synchronized void setAngle(int angle){
-        if(angle>controlAngle){
+    public synchronized void setPwmDutyRatio(int angleR,int angleL){
+        if(angleR>controlAngle||angleL>controlAngle||angleL<0||angleR<0){
             return;
         }
 
         //音データ作製
-        float temp=MathUtil.map((float)angle,0f,controlAngle,0.5f,2.4f);
-        float duty=MathUtil.map(temp,0,20f,0f,relativePulseFrequency);
-        //Log.i(TAG,String.valueOf(duty));
-        for(int i=0;i<relativePulseFrequency;i++){
-            if(i<duty){
+        float tempR=MathUtil.map((float)angleR,0f,controlAngle,0.5f,2.4f);
+        float tempL=MathUtil.map((float)angleL,0f,controlAngle,0.5f,2.4f);
+
+        float dutyR=MathUtil.map(tempR,0,20f,0f,relativePulseFrequency);
+        float dutyL=MathUtil.map(tempL,0,20f,0f,relativePulseFrequency);
+
+        Log.i(TAG,String.valueOf(dutyR)+":"+String.valueOf(dutyL));
+        for(int i=0;i<relativePulseFrequency;i+=2){
+            if(i<dutyR){
                 playingBuffer[i]=(byte)255;
             }else {
                 playingBuffer[i] =(byte)0;
+            }
+            if(i<dutyL){
+                playingBuffer[i+1]=(byte)255;
+            }
+            else{
+                playingBuffer[i+1]=(byte)0;
             }
         }
     }

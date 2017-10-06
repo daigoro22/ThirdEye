@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bitmap;
     VRActivity vrActivity;
     ServoController sc;
-    byte[] angleSender=new byte[1];
+    byte[] angleSender=new byte[2];
     SharedPreferences prefs;
     int count=0;
 
@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         imageView = (ImageView) findViewById(R.id.imageView);
         mainHandler = new Handler(getMainLooper());
-        sc=new ServoController(180,10,0.5f,2.4f,48000);
+        sc=new ServoController(180,1,0.5f,2.4f,48000);
         sc.start();
 
         listener = new CaptureManager.CaptureEventListener() {
@@ -134,12 +134,13 @@ public class MainActivity extends AppCompatActivity {
                             Utils.matToBitmap(rgbaMatOut, bitmap);
                             if ((vrActivity = VRActivity.getInstance()) != null) {
                                 vrActivity.setImageBitmap(bitmap);
-                                angleSender[0]=(byte)(vrActivity.getHeadAngle()[1]-90);
-                                udpManager.SendByte(angleSender);
+                                angleSender[0]=(byte)(vrActivity.getHeadAngle()[0]+60);
+                                angleSender[1]=(byte)(vrActivity.getHeadAngle()[1]-90);
+                                udpManager.Send2Byte(angleSender);
                             }
                         }else{
-                            Log.i(TAG,String.valueOf(Util.bytesToInt(getter)));
-                            sc.setAngle(Util.bytesToInt(getter));
+                            Log.i(TAG,String.valueOf(Util.byteToInt(getter[0])+":"+Util.byteToInt(getter[1])));
+                            sc.setPwmDutyRatio(Util.byteToInt(getter[0]),Util.byteToInt(getter[1]));
                         }
                     }
                 });
@@ -279,6 +280,4 @@ public class MainActivity extends AppCompatActivity {
             }
             });
     }
-
-
 }

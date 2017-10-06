@@ -75,7 +75,7 @@ public class UDPManager
         this.bufferSize=bufferSize;
         sender=new byte[bufferSize];
         senderBuffer=new byte[bufferSize];
-        byteSender=new byte[1];
+        byteSender=new byte[2];
         if(bufferSize>packetSize){//データ分割するかどうか
             this.packetSize=packetSize;
             isDataDevided=true;
@@ -90,8 +90,8 @@ public class UDPManager
         getterBuffer=new byte[bufferSize];
         getter=new byte[bufferSize];
         getterPacketBuffer=new byte[packetSize];
-        simpleGetter=new byte[1];
-        simpleGetterBuffer=new byte[1];
+        simpleGetter=new byte[2];
+        simpleGetterBuffer=new byte[2];
         maxIndexNum=bufferSize/packetSize;
     }
 
@@ -130,8 +130,8 @@ public class UDPManager
             try {
                 GetterUdpSocket.setReceiveBufferSize(packetSize);
                 GetterUdpSocket.setSendBufferSize(packetSize);
-                SenderUdpSocket.setReceiveBufferSize(1);
-                SenderUdpSocket.setSendBufferSize(1);
+                SenderUdpSocket.setReceiveBufferSize(2);
+                SenderUdpSocket.setSendBufferSize(2);
             } catch (SocketException e) {
                 e.printStackTrace();
             }
@@ -139,15 +139,15 @@ public class UDPManager
             Read();
         }else{
             try {
-                GetterUdpSocket.setReceiveBufferSize(1);
-                GetterUdpSocket.setSendBufferSize(1);
+                GetterUdpSocket.setReceiveBufferSize(2);
+                GetterUdpSocket.setSendBufferSize(2);
                 SenderUdpSocket.setReceiveBufferSize(packetSize);
                 SenderUdpSocket.setSendBufferSize(packetSize);
             } catch (SocketException e) {
                 e.printStackTrace();
             }
             Send();
-            SimpleRead();
+            Simple2ByteRead();
         }
     }
 
@@ -165,15 +165,15 @@ public class UDPManager
         }
     }
 
-    private void SimpleRead(){
+    private void Simple2ByteRead(){
         (readHandler=Util.GetNewHandler("SimpleReadThread")).post(new Runnable() {
             @Override
             public void run() {
                 while(run) {
-                    getterDatagram.setData(simpleGetterBuffer, 0, 1);
+                    getterDatagram.setData(simpleGetterBuffer,0,2);
                         try {
                             GetterUdpSocket.receive(getterDatagram);
-                            System.arraycopy(simpleGetterBuffer,0,simpleGetter,0,1);
+                            System.arraycopy(simpleGetterBuffer,0,simpleGetter,0,2);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -248,14 +248,14 @@ public class UDPManager
         sendHandler=Util.GetNewHandler("SendThread");
     }
 
-    public void SendByte(final byte data[]){
+    public void Send2Byte(final byte data[]){
         if(sendHandler==null)
             return;
         sendHandler.post(new Runnable() {
             @Override
             public void run() {
-                System.arraycopy(data,0,byteSender,0,1);
-                senderDatagram.setData(byteSender,0,1);
+                System.arraycopy(data,0,byteSender,0,2);
+                senderDatagram.setData(byteSender,0,2);
                 try {
                     SenderUdpSocket.send(senderDatagram);
                 } catch (IOException e) {

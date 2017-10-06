@@ -17,7 +17,7 @@ public class Util
         return new Handler(thread.getLooper());
     }
 
-    public static int bytesToInt(byte[] b){
-        return ByteBuffer.wrap(b).get()&0xff;
+    public static int byteToInt(byte b){
+        return b&0xff;
     }
 }
