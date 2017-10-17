@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 public class UDPManager
 {
-    private DatagramPacket senderDatagram,getterDatagram;
+    private DatagramPacket senderDatagram,getterDatagram,senderDatagram_sub;
     private DatagramSocket SenderUdpSocket,GetterUdpSocket;
     private String address;
     private int port;
@@ -124,6 +124,11 @@ public class UDPManager
             e.printStackTrace();
         }
         senderDatagram=new DatagramPacket(sender,packetSize,address,port);
+        try {
+            senderDatagram_sub=new DatagramPacket(sender,packetSize,InetAddress.getByName("192.168.1.2"),port);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
         listener.onConnected(nodeType.name);
 
         if(isServer){
@@ -232,8 +237,10 @@ public class UDPManager
         if(!isDataDevided)
             return;
         senderDatagram.setData(sync,0,4);
+        senderDatagram_sub.setData(sync,0,4);
         try {
             SenderUdpSocket.send(senderDatagram);
+            SenderUdpSocket.send(senderDatagram_sub);
             try {
                 Thread.sleep(sendDelay);
             } catch (InterruptedException e) {
@@ -281,8 +288,10 @@ public class UDPManager
                     senderPacketBuffer[0]=(byte)senderPacketNum;
                     System.arraycopy(sender,senderOffset,senderPacketBuffer,1,packetSize-1);
                     senderDatagram.setData(senderPacketBuffer,0,packetSize);
+                    senderDatagram_sub.setData(senderPacketBuffer,0,packetSize);
                     try {
                         SenderUdpSocket.send(senderDatagram);
+                        SenderUdpSocket.send(senderDatagram_sub);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -293,12 +302,15 @@ public class UDPManager
                     senderPacketBuffer[0] = (byte) senderPacketNum;
                     System.arraycopy(sender, senderOffset, senderPacketBuffer, 1, bufferSize - senderOffset);
                     senderDatagram.setData(senderPacketBuffer, 0, bufferSize - senderOffset);
+                    senderDatagram_sub.setData(senderPacketBuffer,0,bufferSize-senderOffset);
                 }else{
                     System.arraycopy(sender,0,senderPacketBuffer,0,sender.length);
                     senderDatagram.setData(senderBuffer,0,senderBuffer.length);
+                    senderDatagram_sub.setData(senderBuffer,0,senderBuffer.length);
                 }
                 try {
                     SenderUdpSocket.send(senderDatagram);
+                    SenderUdpSocket.send(senderDatagram_sub);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
