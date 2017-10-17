@@ -23,6 +23,7 @@
 
         <activity android:name=".configure.ConfigureActivity"></activity>
         <activity android:name=".configure.ConfigureSelectActivity"></activity>
+        <activity android:name=".VRActivity2"></activity>
     </application>
 
 </manifest>

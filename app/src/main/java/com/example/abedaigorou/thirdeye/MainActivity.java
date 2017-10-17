@@ -51,10 +51,10 @@ public class MainActivity extends AppCompatActivity {
     private String TAG="MainActivity";
     //final static int size=777600;
     UDPManager udpManager;
-    byte[] imageData;
+    byte[] imageData,Ydata,Udata,Vdata;
     Mat rgbaMatOut,mYuvMat,bgrMat;
     Bitmap bitmap;
-    VRActivity vrActivity;
+    VRActivity2 vrActivity;
     ServoController sc;
     byte[] angleSender=new byte[2];
     SharedPreferences prefs;
@@ -122,18 +122,17 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onRead(final byte[] getter) {
+                System.arraycopy(getter,0,Ydata,0,Ydata.length);
+                System.arraycopy(getter,Ydata.length,Udata,0,Udata.length);
+                System.arraycopy(getter,Ydata.length+Udata.length,Vdata,0,Vdata.length);
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         if(isServer) {
-                            rateCheck();
-                            mYuvMat = ImageUtils.ByteToMat(getter, receiveWidth, receiveHeight);
-                            Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
-                            Imgproc.cvtColor(bgrMat, rgbaMatOut, Imgproc.COLOR_BGR2RGBA, 0);
-                            bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
-                            Utils.matToBitmap(rgbaMatOut, bitmap);
-                            if ((vrActivity = VRActivity.getInstance()) != null) {
-                                vrActivity.setImageBitmap(bitmap);
+                            //rateCheck();
+                            if ((vrActivity = VRActivity2.getInstance()) != null) {
+                                vrActivity.setImageData(Ydata,Udata,Vdata);
                                 angleSender[0]=(byte)(vrActivity.getHeadAngle()[0]+60);
                                 angleSender[1]=(byte)(vrActivity.getHeadAngle()[1]-90);
                                 udpManager.Send2Byte(angleSender);
@@ -209,6 +208,9 @@ public class MainActivity extends AppCompatActivity {
         afMode = ConfigureUtils.getConfiguredIntValue(instance,R.string.key_autofocus_preference,"0");
         size = width * (height + height / 2);
         imageData = new byte[size];
+        Ydata=new byte[width*height];
+        Udata=new byte[width*height/4];
+        Vdata=new byte[width*height/4];
         rgbaMatOut = new Mat();
         bgrMat = new Mat(receiveHeight, receiveWidth, CvType.CV_8UC4);
 
@@ -263,8 +265,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onVRClicked(View v){
-        Intent intent=new Intent(getApplicationContext(),VRActivity.class);
-        //intent.setClassName("com.example.abedaigorou.yuvconverttest","com.example.abedaigorou.yuvconverttest.VRActivity");
+        Intent intent=new Intent(getApplicationContext(),VRActivity2.class);
+        //intent.setClassName("com.example.abedaigorou.yuvconverttest","com.example.abedaigorou.yuvconverttest.VRActivity2");
         startActivity(intent);
     }
 
