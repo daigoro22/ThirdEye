@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         if(!isServer) {
                             rateCheck();
+                            /*
                             System.arraycopy(data, 0, imageData, 0, data.length);
                             mYuvMat = ImageUtils.ByteToMat(data, width, height);
                             Imgproc.cvtColor(mYuvMat, bgrMat, Imgproc.COLOR_YUV2BGR_I420);
@@ -87,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
                             bitmap = Bitmap.createBitmap(bgrMat.cols(), bgrMat.rows(), Bitmap.Config.ARGB_8888);
                             Utils.matToBitmap(rgbaMatOut, bitmap);
                             int p=bitmap.getPixel(0,0);
+                            */
                         }
                     }
                 });
