@@ -23,6 +23,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 
 import static android.opengl.GLES10.GL_CULL_FACE;
 import static android.opengl.GLES10.GL_UNSIGNED_BYTE;
+import static android.opengl.GLES20.GL_ARRAY_BUFFER;
 import static android.opengl.GLES20.GL_TEXTURE_2D;
 
 public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
@@ -71,7 +72,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
     private int vpPositionParam;
     private int scaleParam;
     private int cubeTextureVertexParam;
-    private int textureYParam,textureUParam,textureVParam;
+    private int textureYParam,textureUParam,textureVParam,vboParam,iboParam,texboParam;
 
     private int[] cubeTextureID=new int[3];
 
@@ -208,13 +209,35 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
 
         //GLES20.glVertexAttribPointer(cubePositionParam,3,GLES20.GL_FLOAT,false,0,cb);
 
+        //vbo
+        GLES20.glBindBuffer(GL_ARRAY_BUFFER,vboParam);
+        GLES20.glEnableVertexAttribArray(drawPositionParam);
+        GLES20.glVertexAttribPointer(drawPositionParam,3,GLES20.GL_FLOAT,false,0,0);
+        GLES20.glBindBuffer(GL_ARRAY_BUFFER,0);
+
+        //texbo
+        GLES20.glBindBuffer(GL_ARRAY_BUFFER,texboParam);
+        GLES20.glEnableVertexAttribArray(cubeTextureVertexParam);
+        GLES20.glVertexAttribPointer(cubeTextureVertexParam,2,GLES20.GL_FLOAT,false,0,0);
+
+        //初期化
+        GLES20.glBindBuffer(GL_ARRAY_BUFFER,0);
+
+        /*
         GLES20.glVertexAttribPointer(drawPositionParam,3,GLES20.GL_FLOAT,false,0,drawVertexBuffer);
         GLES20.glUniformMatrix4fv(vpPositionParam,1,false,modelViewProjection,0);
         GLES20.glUniformMatrix4fv(scaleParam,1,false,scale,0);
-        GLES20.glVertexAttribPointer(cubeTextureVertexParam,2,GLES20.GL_FLOAT,false,0,cubeTextureBuffer);
+        GLES20.glVertexAttribPointer(cubeTextureVertexParam,2,GLES20.GL_FLOAT,false,0,cubeTextureBuffer);*/
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES,cubeIndexBuffer.capacity(), GLES20.GL_UNSIGNED_SHORT, cubeIndexBuffer);
+        //GLES20.glDrawElements(GLES20.GL_TRIANGLES,cubeIndexBuffer.capacity(), GLES20.GL_UNSIGNED_SHORT, cubeIndexBuffer);
         //GLES20.glDrawArrays(GLES20.GL_TRIANGLES,0,objectDatas.cubeVertices.length/3);
+
+        //iboバインド
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,iboParam);
+        //描画
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES,cubeIndexBuffer.capacity(),GLES20.GL_UNSIGNED_SHORT,0);
+        //後片付け
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
 
 
         //無効化
@@ -273,6 +296,34 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glEnable(GL_CULL_FACE);
         //テクスチャの生成
         GLES20.glGenTextures(3,cubeTextureID,0);
+
+        int[] boParam=new int[3];
+        //バッファの生成
+        GLES20.glGenBuffers(3,boParam,0);
+        vboParam=boParam[0];
+        iboParam=boParam[1];
+        texboParam=boParam[2];
+
+        //バッファをバインド
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,iboParam);
+        //バッファにデータ転送
+        GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER,2*cubeIndexBuffer.capacity(),cubeIndexBuffer,GLES20.GL_STATIC_DRAW);
+        //後片付け
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        //vboバインド
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,vboParam);
+        //バッファにデータ転送
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,4*drawVertexBuffer.capacity(),drawVertexBuffer,GLES20.GL_STATIC_DRAW);
+        //後片付け
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
+
+        //texboバインド
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,texboParam);
+        //バッファにデータ転送
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,4*cubeTextureBuffer.capacity(),cubeTextureBuffer,GLES20.GL_STATIC_DRAW);
+        //後片付け
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
 
         //テクスチャ0
         //テクスチャアクティブ
