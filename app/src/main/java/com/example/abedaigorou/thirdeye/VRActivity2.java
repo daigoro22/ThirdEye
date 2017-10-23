@@ -29,6 +29,9 @@ import static android.opengl.GLES20.GL_TEXTURE_2D;
 
 public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
     private static final String TAG="VRRobot";
+    public final static String INTENTTAG_WIDTH="Intent_VRActivity_WIDTH";
+    public final static String INTENTTAG_HEIGHT="Intent_VRActivity_HEIGHT";
+
     private static final float CAMERA_Z = -14f;//10;
     private static VRActivity2 instance;
     public static final String sVertexShaderSource =
@@ -63,9 +66,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
 
     private final float Z_NEAR=0.1f;
     private final float Z_FAR=100.0f;
-    private final int YUV_WIDTH=720;
-    private final int YUV_HEIGHT=480;
-    private final int YUV_SIZE=YUV_HEIGHT*YUV_WIDTH;
+    private int width,height,imageSize;
     private int cubeProgram;
 
     private int drawPositionParam;
@@ -91,8 +92,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
     float[] rotate=new float[16];
     float[] eularAngle=new float[3];
     float[] headAngle=new float[3];
-    byte[] dataY=new byte[YUV_WIDTH*YUV_HEIGHT];
-    byte[] dataU=new byte[YUV_WIDTH*YUV_HEIGHT/4],dataV=new byte[YUV_WIDTH*YUV_HEIGHT/4];
+    byte[] dataY,dataU,dataV;
     private int frameCount=0;
     private Bitmap imageBitmap;
     private ServoController sc;
@@ -112,6 +112,15 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         }*/
 
         super.onCreate(savedInstanceState);
+        Bundle imageSizeBundle=getIntent().getExtras();
+        width=imageSizeBundle.getInt(INTENTTAG_WIDTH);
+        height=imageSizeBundle.getInt(INTENTTAG_HEIGHT);
+        imageSize=width*height;
+
+        dataY=new byte[imageSize];
+        dataU=new byte[imageSize/4];
+        dataV=new byte[imageSize/4];
+
         setContentView(R.layout.common_ui);
         GvrView gvrView=(GvrView)findViewById(R.id.gvr_view);
         sc=new ServoController(180,10,5,24,48000);
@@ -199,8 +208,8 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glUniform1i(textureYParam,0);
         //テクスチャ画像更新
         //GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,imageBitmap,0);
-        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,YUV_WIDTH,YUV_HEIGHT,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
-        //GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH,YUV_HEIGHT,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
+        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,width,height,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
+        //GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,width,height,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
         checkGLError("Drawing cube");
 
         //テクスチャ1
@@ -209,8 +218,8 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glUniform1i(textureUParam,1);
-        //GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
-        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,YUV_WIDTH/2,YUV_HEIGHT/2,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
+        //GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,width/2,height/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
+        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,width/2,height/2,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
         checkGLError("Drawing cube");
 
         //テクスチャ2
@@ -219,8 +228,8 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glUniform1i(textureVParam,2);
-        //GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
-        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,YUV_WIDTH/2,YUV_HEIGHT/2,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
+        //GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,width/2,height/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
+        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,width/2,height/2,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
 
         //GLES20.glVertexAttribPointer(cubePositionParam,3,GLES20.GL_FLOAT,false,0,cb);
 
@@ -351,7 +360,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         // 拡大時の補間設定
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH,YUV_HEIGHT,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,width,height,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
         checkGLError("Cube program params");
 
         //テクスチャ1
@@ -359,7 +368,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,cubeTextureID[1]);
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,width/2,height/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
         //GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,imageBitmap,0);
         checkGLError("Cube program params");
 
@@ -368,7 +377,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,cubeTextureID[2]);
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,width/2,height/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
         checkGLError("Cube program params");
 
         /*
@@ -398,6 +407,8 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
     }
 
     public void setImageData(byte[] getter){
+        if(getter==null||dataY==null||dataU==null||dataV==null)
+            return;
         System.arraycopy(getter,0,dataY,0,dataY.length);
         System.arraycopy(getter,dataU.length,dataU,0,dataU.length);
         System.arraycopy(getter,dataY.length+dataU.length,dataV,0,dataV.length);

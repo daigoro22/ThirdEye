@@ -265,6 +265,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void onVRClicked(View v){
         Intent intent=new Intent(getApplicationContext(),VRActivity2.class);
+        intent.putExtra(VRActivity2.INTENTTAG_WIDTH,receiveWidth);
+        intent.putExtra(VRActivity2.INTENTTAG_HEIGHT,receiveHeight);
         //intent.setClassName("com.example.abedaigorou.yuvconverttest","com.example.abedaigorou.yuvconverttest.VRActivity2");
         startActivity(intent);
     }
