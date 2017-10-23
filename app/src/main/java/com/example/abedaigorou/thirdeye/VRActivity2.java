@@ -1,6 +1,7 @@
 package com.example.abedaigorou.thirdeye;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.Bundle;
@@ -32,10 +33,10 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
     private static VRActivity2 instance;
     public static final String sVertexShaderSource =
                     //"uniform mat4 wMatrix;" +
-                    "attribute vec2 A_texture_uv;"+
                     "uniform mat4 sMatrix;"+
                     "uniform mat4 vpMatrix;" +
                     "attribute vec3 position;" +
+                    "attribute vec2 A_texture_uv;"+
                     "varying vec2 V_texture_uv;"+
                     "void main() {" +
                     "  gl_Position = vpMatrix * sMatrix * vec4(position, 1.0);" +
@@ -50,21 +51,20 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
             "uniform sampler2D textureV;"+
             "varying vec2 V_texture_uv;"+
             "const mat3 convert = mat3( 1.164, 1.164, 1.164, 0.0, -0.213, 2.112, 1.793, -0.533, 0.0 ); "+
+            "vec3 yuv;"+
+            "vec3 rgb;"+
             "void main() {" +
-                "lowp vec3 yuv;"+
-                "lowp vec3 rgb;"+
                 "yuv.x = (texture2D(textureY,V_texture_uv).x - (16.0 / 255.0));"+
                 "yuv.y = (texture2D(textureU,V_texture_uv).x - 0.5);"+
                 "yuv.z = (texture2D(textureV,V_texture_uv).x - 0.5);"+
                 "rgb=convert*yuv;"+
                 "gl_FragColor = vec4(rgb,1.0);"+
-                //"gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);" +
             "}";
 
     private final float Z_NEAR=0.1f;
     private final float Z_FAR=100.0f;
-    private final int YUV_WIDTH=1024;
-    private final int YUV_HEIGHT=768;
+    private final int YUV_WIDTH=720;
+    private final int YUV_HEIGHT=480;
     private final int YUV_SIZE=YUV_HEIGHT*YUV_WIDTH;
     private int cubeProgram;
 
@@ -79,7 +79,6 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
     FloatBuffer drawVertexBuffer;
     FloatBuffer cubeTextureBuffer;
     ShortBuffer cubeIndexBuffer;
-
 
     private float[] sphereVertex;
     private Sphere sphere=new Sphere(14,14,10);
@@ -99,9 +98,19 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
     private ServoController sc;
     private InputStream inYUV;
     private ByteBuffer texYBuffer,texUBuffer,texVBuffer;
+    private Bitmap reinokao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        /*inYUV=getResources().openRawResource(R.raw.data_yuv);
+        try {
+            inYUV.read(dataY,0,YUV_SIZE);
+            inYUV.read(dataU,0,YUV_SIZE/4);
+            inYUV.read(dataV,0,YUV_SIZE/4);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.common_ui);
         GvrView gvrView=(GvrView)findViewById(R.id.gvr_view);
@@ -123,10 +132,13 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
             // sustained performance mode.
             AndroidCompat.setSustainedPerformanceMode(this, true);
         }
+        texYBuffer=ByteBuffer.wrap(dataY);
+        texUBuffer=ByteBuffer.wrap(dataU);
+        texVBuffer=ByteBuffer.wrap(dataV);
 
-        texYBuffer=ByteBuffer.allocate(YUV_SIZE);
-        texUBuffer=ByteBuffer.allocate(YUV_SIZE/4);
-        texVBuffer=ByteBuffer.allocate(YUV_SIZE/4);
+        /*texYBuffer.put(dataY);
+        texUBuffer.put(dataU);
+        texVBuffer.put(dataV);*/
 
         texYBuffer.position(0);
         texVBuffer.position(0);
@@ -177,35 +189,37 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glEnableVertexAttribArray(drawPositionParam);
         GLES20.glEnableVertexAttribArray(cubeTextureVertexParam);
 
-
         //テクスチャアクティブ
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         //テクスチャのバインド
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,cubeTextureID[0]);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         //texture0に0を代入
         GLES20.glUniform1i(textureYParam,0);
         //テクスチャ画像更新
         //GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,imageBitmap,0);
         GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,YUV_WIDTH,YUV_HEIGHT,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
+        //GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH,YUV_HEIGHT,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
         checkGLError("Drawing cube");
 
         //テクスチャ1
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,cubeTextureID[1]);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glUniform1i(textureUParam,1);
+        //GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
         GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,YUV_WIDTH/2,YUV_HEIGHT/2,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
         checkGLError("Drawing cube");
 
         //テクスチャ2
         GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,cubeTextureID[2]);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glUniform1i(textureVParam,2);
+        //GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
         GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,YUV_WIDTH/2,YUV_HEIGHT/2,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
 
         //GLES20.glVertexAttribPointer(cubePositionParam,3,GLES20.GL_FLOAT,false,0,cb);
@@ -224,14 +238,13 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         //初期化
         GLES20.glBindBuffer(GL_ARRAY_BUFFER,0);
 
-        /*
-        GLES20.glVertexAttribPointer(drawPositionParam,3,GLES20.GL_FLOAT,false,0,drawVertexBuffer);
+        //GLES20.glVertexAttribPointer(drawPositionParam,3,GLES20.GL_FLOAT,false,0,drawVertexBuffer);
         GLES20.glUniformMatrix4fv(vpPositionParam,1,false,modelViewProjection,0);
         GLES20.glUniformMatrix4fv(scaleParam,1,false,scale,0);
-        GLES20.glVertexAttribPointer(cubeTextureVertexParam,2,GLES20.GL_FLOAT,false,0,cubeTextureBuffer);*/
+        //GLES20.glVertexAttribPointer(cubeTextureVertexParam,2,GLES20.GL_FLOAT,false,0,cubeTextureBuffer);
+
 
         //GLES20.glDrawElements(GLES20.GL_TRIANGLES,cubeIndexBuffer.capacity(), GLES20.GL_UNSIGNED_SHORT, cubeIndexBuffer);
-        //GLES20.glDrawArrays(GLES20.GL_TRIANGLES,0,objectDatas.cubeVertices.length/3);
 
         //iboバインド
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER,iboParam);
@@ -239,6 +252,9 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glDrawElements(GLES20.GL_TRIANGLES,cubeIndexBuffer.capacity(),GLES20.GL_UNSIGNED_SHORT,0);
         //後片付け
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
+        checkGLError("Drawing cube");
+
+        //GLES20.glDrawArrays(GLES20.GL_TRIANGLES,0,objectDatas.cubeVertices.length/3);
 
 
         //無効化
@@ -262,7 +278,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
     @Override
     public void onSurfaceCreated(EGLConfig eglConfig) {
         Log.i(TAG,"onSurfaceCreated");
-        GLES20.glClearColor(0f, 0f, 1f,1f);
+        GLES20.glClearColor(0f, 1f, 0f,1f);
 
         sphere.build(true,true,true);
 
@@ -331,26 +347,18 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         //テクスチャのバインド
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,cubeTextureID[0]);
-        //GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,cubeTextureID[0]);
-
-        //ビットマップの生成
-        //imageBitmap= BitmapFactory.decodeResource(getResources(),R.drawable.fisheye);
-
-        //cubeBmp=Bitmap.createScaledBitmap(cubeBmp,32,32,false);
-        /*GLES20.glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        GLES20.glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);*/
         // 縮小時の補間設定
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         // 拡大時の補間設定
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH,YUV_HEIGHT,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
         checkGLError("Cube program params");
 
         //テクスチャ1
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,cubeTextureID[1]);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
         //GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,imageBitmap,0);
         checkGLError("Cube program params");
@@ -358,8 +366,8 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         //テクスチャ2
         GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,cubeTextureID[2]);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
         checkGLError("Cube program params");
 
@@ -389,22 +397,14 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         return headAngle;
     }
 
-    public void setImageBitmap(Bitmap bmp){
-        this.imageBitmap=bmp;
+    public void setImageData(byte[] getter){
+        System.arraycopy(getter,0,dataY,0,dataY.length);
+        System.arraycopy(getter,dataU.length,dataU,0,dataU.length);
+        System.arraycopy(getter,dataY.length+dataU.length,dataV,0,dataV.length);
     }
 
-    public void setImageData(byte[] dataY,byte[] dataU,byte[] dataV){
-        texYBuffer.clear();
-        texUBuffer.clear();
-        texVBuffer.clear();
-
-        texYBuffer.put(dataY);
-        texUBuffer.put(dataU);
-        texVBuffer.put(dataV);
-
-        texYBuffer.position(0);
-        texUBuffer.position(0);
-        texVBuffer.position(0);
+    public void setImageBitmap(Bitmap bmp){
+        this.imageBitmap=bmp;
     }
 
     public static VRActivity2 getInstance(){

@@ -124,9 +124,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onRead(final byte[] getter) {
-                System.arraycopy(getter,0,Ydata,0,Ydata.length);
-                System.arraycopy(getter,Ydata.length,Udata,0,Udata.length);
-                System.arraycopy(getter,Ydata.length+Udata.length,Vdata,0,Vdata.length);
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -134,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                         if(isServer) {
                             //rateCheck();
                             if ((vrActivity = VRActivity2.getInstance()) != null) {
-                                vrActivity.setImageData(Ydata,Udata,Vdata);
+                                vrActivity.setImageData(getter);
                                 angleSender[0]=(byte)(vrActivity.getHeadAngle()[0]+60);
                                 angleSender[1]=(byte)(vrActivity.getHeadAngle()[1]-90);
                                 udpManager.Send2Byte(angleSender);
