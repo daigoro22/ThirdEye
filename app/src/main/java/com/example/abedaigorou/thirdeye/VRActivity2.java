@@ -123,6 +123,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
             // sustained performance mode.
             AndroidCompat.setSustainedPerformanceMode(this, true);
         }
+
         texYBuffer=ByteBuffer.allocate(YUV_SIZE);
         texUBuffer=ByteBuffer.allocate(YUV_SIZE/4);
         texVBuffer=ByteBuffer.allocate(YUV_SIZE/4);
@@ -187,7 +188,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glUniform1i(textureYParam,0);
         //テクスチャ画像更新
         //GLUtils.texImage2D(GLES20.GL_TEXTURE_2D,0,imageBitmap,0);
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH,YUV_HEIGHT,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
+        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,YUV_WIDTH,YUV_HEIGHT,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texYBuffer);
         checkGLError("Drawing cube");
 
         //テクスチャ1
@@ -196,7 +197,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
         GLES20.glUniform1i(textureUParam,1);
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
+        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,YUV_WIDTH/2,YUV_HEIGHT/2,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texUBuffer);
         checkGLError("Drawing cube");
 
         //テクスチャ2
@@ -205,7 +206,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
         GLES20.glTexParameteri(GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
         GLES20.glUniform1i(textureVParam,2);
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,YUV_WIDTH/2,YUV_HEIGHT/2,0,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
+        GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D,0,0,0,YUV_WIDTH/2,YUV_HEIGHT/2,GLES20.GL_LUMINANCE,GL_UNSIGNED_BYTE,texVBuffer);
 
         //GLES20.glVertexAttribPointer(cubePositionParam,3,GLES20.GL_FLOAT,false,0,cb);
 
