@@ -3,6 +3,7 @@ package com.example.abedaigorou.thirdeye;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -132,13 +133,14 @@ public class MainActivity extends AppCompatActivity {
                             //rateCheck();
                             if ((vrActivity = VRActivity2.getInstance()) != null) {
                                 vrActivity.setImageData(getter);
+
                                 angleSender[0]=(byte)(vrActivity.getHeadAngle()[0]+60);
                                 angleSender[1]=(byte)(vrActivity.getHeadAngle()[1]-90);
                                 udpManager.Send2Byte(angleSender);
                             }
                         }else{
                             Log.i(TAG,String.valueOf(Util.byteToInt(getter[0])+":"+Util.byteToInt(getter[1])));
-                            sc.setPwmDutyRatio(Util.byteToInt(getter[0]),Util.byteToInt(getter[1]));
+                            sc.setPwmDutyRatio(Util.byteToInt(getter[1]),Util.byteToInt(getter[1]));
                         }
                     }
                 });

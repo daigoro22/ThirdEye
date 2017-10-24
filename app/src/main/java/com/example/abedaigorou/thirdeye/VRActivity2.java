@@ -410,7 +410,7 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
         if(getter==null||dataY==null||dataU==null||dataV==null)
             return;
         System.arraycopy(getter,0,dataY,0,dataY.length);
-        System.arraycopy(getter,dataU.length,dataU,0,dataU.length);
+        System.arraycopy(getter,dataY.length,dataU,0,dataU.length);
         System.arraycopy(getter,dataY.length+dataU.length,dataV,0,dataV.length);
     }
 
