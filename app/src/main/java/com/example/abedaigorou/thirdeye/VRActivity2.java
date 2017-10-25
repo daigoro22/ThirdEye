@@ -95,7 +95,6 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
     byte[] dataY,dataU,dataV;
     private int frameCount=0;
     private Bitmap imageBitmap;
-    private ServoController sc;
     private InputStream inYUV;
     private ByteBuffer texYBuffer,texUBuffer,texVBuffer;
     private Bitmap reinokao;
@@ -123,8 +122,6 @@ public class VRActivity2 extends GvrActivity implements GvrView.StereoRenderer{
 
         setContentView(R.layout.common_ui);
         GvrView gvrView=(GvrView)findViewById(R.id.gvr_view);
-        sc=new ServoController(180,10,5,24,48000);
-        sc.start();
 
         instance=this;
         gvrView.setEGLConfigChooser(8,8,8,8,16,1);//RGBA、デプスバッファ、ステンシルバッファのサイズ

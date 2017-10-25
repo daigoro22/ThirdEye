@@ -10,9 +10,12 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.AppLaunchChecker;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.abedaigorou.thirdeye.configure.ConfigureActivity;
@@ -32,7 +35,8 @@ import java.nio.ByteBuffer;
 
 public class MainActivity extends AppCompatActivity {
     static MainActivity instance;
-    ImageView imageView;
+    ImageButton imageButton;
+    TextView addrTextView,imageSizeTextView,isServerTextView;
     CaptureManager captureManager;
     CaptureManager.CaptureEventListener listener;
     public Handler mainHandler;
@@ -67,9 +71,12 @@ public class MainActivity extends AppCompatActivity {
         instance = this;
         setContentView(R.layout.activity_main);
         prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        imageView = (ImageView) findViewById(R.id.imageView);
+        imageButton = (ImageButton) findViewById(R.id.imageButton);
+        addrTextView=(TextView)findViewById(R.id.addrTextView);
+        isServerTextView=(TextView)findViewById(R.id.isServerTextView);
+        imageSizeTextView=(TextView)findViewById(R.id.imageSizeTextView);
         mainHandler = new Handler(getMainLooper());
-        sc=new ServoController(180,1,0.5f,2.4f,48000);
+        sc=new ServoController(120,60,1,0.5f,2.4f,48000);
         sc.start();
 
         listener = new CaptureManager.CaptureEventListener() {
@@ -165,7 +172,12 @@ public class MainActivity extends AppCompatActivity {
                     Log.i("a", "success");
                     showToast("接続OK");
                     resetPrefInfo();
-
+                    //IPアドレス、画像サイズ表示
+                    addrTextView.setText(HOST);
+                    String imSize=(isServer)?String.valueOf(receiveWidth)+"x"+String.valueOf(receiveHeight):String.valueOf(width)+"x"+String.valueOf(height);
+                    imageSizeTextView.setText(imSize);
+                    String isServerTex=isServer?"サーバー":"クライアント";
+                    isServerTextView.setText(isServerTex);
                     if (!AppLaunchChecker.hasStartedFromLauncher(instance)) {
                         //初回起動
                         Intent intent=new Intent(getApplicationContext(),ConfigureActivity.class);
@@ -253,6 +265,11 @@ public class MainActivity extends AppCompatActivity {
         if(isServer){
             udpManager.setBufferAndPacketSize(receiveSize,packetSize);
             udpManager.Connect(HOST,PORT,true);
+            Intent intent=new Intent(getApplicationContext(),VRActivity2.class);
+            intent.putExtra(VRActivity2.INTENTTAG_WIDTH,receiveWidth);
+            intent.putExtra(VRActivity2.INTENTTAG_HEIGHT,receiveHeight);
+            //intent.setClassName("com.example.abedaigorou.yuvconverttest","com.example.abedaigorou.yuvconverttest.VRActivity2");
+            startActivity(intent);
         }else{
             udpManager.setBufferAndPacketSize(size,packetSize);
             udpManager.Connect(HOST,PORT,false);
@@ -265,14 +282,6 @@ public class MainActivity extends AppCompatActivity {
         udpManager.Disconnect();
     }
 
-    public void onVRClicked(View v){
-        Intent intent=new Intent(getApplicationContext(),VRActivity2.class);
-        intent.putExtra(VRActivity2.INTENTTAG_WIDTH,receiveWidth);
-        intent.putExtra(VRActivity2.INTENTTAG_HEIGHT,receiveHeight);
-        //intent.setClassName("com.example.abedaigorou.yuvconverttest","com.example.abedaigorou.yuvconverttest.VRActivity2");
-        startActivity(intent);
-    }
-
     public void onConfigureClicked(View v){
         startActivity(new Intent(this, ConfigureSelectActivity.class));
     }
@@ -281,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                imageView.setImageBitmap(bitmap);
+                imageButton.setImageBitmap(bitmap);
             }
             });
     }

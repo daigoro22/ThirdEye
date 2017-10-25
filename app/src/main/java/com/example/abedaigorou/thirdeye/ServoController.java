@@ -22,18 +22,19 @@ public class ServoController implements Runnable
     private HandlerThread playingThread;
     private int minBufferSize;
     private boolean isPlaying=false;
-    private int wait,controlAngle;
+    private int wait,maxAngle,minAngle;
     private float minDuty,maxDuty;
     private final String TAG="Servo";
 
-    public ServoController(int controlAngle, int wait, float minDuty, float maxDuty, int samplingRate){
+    public ServoController(int maxAngle,int minAngle, int wait, float minDuty, float maxDuty, int samplingRate){
         relativePulseFrequency=(samplingRate/PWM_FREQUENCY*2);
         //samplingRate=(int)(PWM_FREQUENCY*(1f/(maxDuty-minDuty))*controlAngle/resolusion)/2;
         this.samplingRate=samplingRate;
         playingBuffer=new byte[relativePulseFrequency];
         this.minDuty=minDuty;
         this.maxDuty=maxDuty;
-        this.controlAngle=controlAngle;
+        this.maxAngle=maxAngle;
+        this.minAngle=minAngle;
 
         audioTrack=new AudioTrack(
                 AudioManager.STREAM_MUSIC,//音楽ストリーム
@@ -46,18 +47,18 @@ public class ServoController implements Runnable
     }
 
     public synchronized void setPwmDutyRatio(int angleR,int angleL){
-        if(angleR>controlAngle||angleL>controlAngle||angleL<0||angleR<0){
+        if(angleR>maxAngle || angleL>maxAngle || angleR<minAngle || angleL<minAngle || angleL<0 || angleR<0){
             return;
         }
 
         //音データ作製
-        float tempR=MathUtil.map((float)angleR,0f,controlAngle,0.5f,2.4f);
-        float tempL=MathUtil.map((float)angleL,0f,controlAngle,0.5f,2.4f);
+        float tempR=MathUtil.map((float)angleR,180,0,2.4f,0.5f);
+        float tempL=MathUtil.map((float)angleL,180,0,2.4f,0.5f);
 
-        float dutyR=MathUtil.map(tempR,0,20f,0f,relativePulseFrequency);
-        float dutyL=MathUtil.map(tempL,0,20f,0f,relativePulseFrequency);
+        float dutyR=MathUtil.map(tempR,20f,0f,relativePulseFrequency,0);
+        float dutyL=MathUtil.map(tempL,20f,0f,relativePulseFrequency,0);
 
-        Log.i(TAG,String.valueOf(dutyR)+":"+String.valueOf(dutyL));
+        Log.i(TAG,String.valueOf(angleR)+":"+String.valueOf(angleL));
         for(int i=0;i<relativePulseFrequency;i+=2){
             if(i<dutyR){
                 playingBuffer[i]=(byte)255;
