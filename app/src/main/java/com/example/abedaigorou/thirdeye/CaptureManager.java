@@ -28,6 +28,7 @@ import android.util.Size;
 
 import com.example.abedaigorou.thirdeye.configure.ConfigureUtils;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -222,17 +223,20 @@ public class CaptureManager {
         mHeight=height;
         AFMODE=afMode;
 
-        imageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 1);
+        imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
 
         imageAvailableListener = new ImageReader.OnImageAvailableListener() {
             //int Yb,Ub,Vb;
             byte[] data;
+            ByteBuffer buffer;
 
             @Override
             public void onImageAvailable(ImageReader reader) {
                 //Log.i(TAG, "onImageAvailable");
                 image = reader.acquireNextImage();
-                data = ImageUtils.ImageToByte(image);
+                buffer = image.getPlanes()[0].getBuffer();
+                data=new byte[buffer.capacity()];
+                buffer.get(data);
                 listener.onTakeImage(data);
                 //listener.onFocusPointTouched();
                 image.close();
