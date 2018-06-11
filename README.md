@@ -9,7 +9,7 @@
 
 ## Demo
 ロボット視点の映像<br>
-https://www.youtube.com/watch?v=5-V3vkgjPl8&list=LLGs9sKnfl4wub6_mCbmzC0w&index=5&t=0s
+https://youtu.be/5-V3vkgjPl8?list=LLGs9sKnfl4wub6_mCbmzC0w
 <br>
 
 ## Requirement
